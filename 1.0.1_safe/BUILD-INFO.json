@@ -1,0 +1,16 @@
+{
+  "version": "1.0.1",
+  "edition": "safe",
+  "base_bundle_manifest_sha256": "ff65507115db9922308a4410afaa3ce8204ad6ca6f7ce1ffe6835dfaa353d404",
+  "native_modules": 45,
+  "cython": "3.3.0",
+  "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
+  "runtime": "Windows CPython 3.13.16 x64",
+  "validation": "Bundled Windows interpreter under Wine 10.0; details in validation-results.txt",
+  "regular_releases_unchanged": true,
+  "builder_files": {
+    "deploy/windows/build_safe.py": "2849ec1eb692496b46b5aea8049c3b2f3549cbd9aa7fdbdf3960d2074696528b",
+    "deploy/windows/verify_safe.py": "8d411f4e21544dab3f50d857472281428b58d0414da9c8e678e4353825d290d0",
+    "docs/windows-protected-installer.md": "d482f0ae6dabc383567689d600eba5cfe5276feaaeb92587eab3f211e6fd140e"
+  }
+}

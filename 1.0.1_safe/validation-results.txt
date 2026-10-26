@@ -1,0 +1,8 @@
+Original 1.0 to protected 1.0.1 upgrade, backup, administrator, configuration, inventory and license identity preservation passed
+Native HTTP routes, login, reads and unlicensed write rejection passed
+
+PASS: hashes, archive, no Netory Python source, fresh/repeated setup, schema, identity preservation, HTTP/license checks, tamper rejection
+
+Additional checks: original 1.0 archive unchanged; regular 1.0.1 EXE/ZIP checksums unchanged; installer PE version 1.0.1.0; 45 native Netory modules; no Netory .py/.c/.pyx/.map in application payload; no private signing key packaged; PowerShell Setup.ps1 syntax valid; seven installer regression tests passed (Linux PYTHONPATH=/var/www/Netory).
+
+Limit: Windows GUI/UAC, Windows service registration, firewall and reboot behavior still require a real Windows test.
