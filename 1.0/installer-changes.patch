@@ -1,0 +1,684 @@
+diff --git a/deploy/windows/Install.cmd b/deploy/windows/Install.cmd
+index f14ebd2..814a380 100644
+--- a/deploy/windows/Install.cmd
++++ b/deploy/windows/Install.cmd
+@@ -2,5 +2,5 @@
+ setlocal
+ set "NETORY_PS=%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe"
+ if exist "%SystemRoot%\Sysnative\WindowsPowerShell\v1.0\powershell.exe" set "NETORY_PS=%SystemRoot%\Sysnative\WindowsPowerShell\v1.0\powershell.exe"
+-"%NETORY_PS%" -NoProfile -ExecutionPolicy Bypass -File "%~dp0Setup.ps1"
++"%NETORY_PS%" -STA -NoProfile -ExecutionPolicy Bypass -File "%~dp0Setup.ps1"
+ if errorlevel 1 pause
+diff --git a/deploy/windows/README.txt b/deploy/windows/README.txt
+index 5cc8566..e837106 100644
+--- a/deploy/windows/README.txt
++++ b/deploy/windows/README.txt
+@@ -3,8 +3,13 @@ NETORY FOR WINDOWS (64-bit)
+ QUICK START
+ 1. Run Netory-Setup.exe and approve the Windows administrator prompt.
+    Alternative: extract the ZIP completely, then double-click Install.cmd.
+-2. Leave port 8000 or choose another unused port.
++2. Choose separate application and database/data folders on a local fixed disk.
++   Defaults: C:\Program Files\Netory and C:\ProgramData\Netory.
++   Leave port 8000 or choose another unused port.
++   Optional: select Use HTTPS, enter the certificate DNS name/IP, browse to a
++   .pfx/.p12 certificate containing its private key and chain, and enter its password.
+ 3. Choose the first administrator name and a password of at least 14 characters.
++   You can click in every field or use Tab to move between them.
+ 4. Click Install Netory. Setup opens Netory in your browser when ready.
+ 
+ No manual Python, database server, pip, .NET installation or Internet connection is
+@@ -19,16 +24,38 @@ SERVICE AND PORT
+ Netory is installed as an automatic Windows service named Netory. It runs as the
+ restricted LocalService account and restarts after an unexpected failure.
+ Use Start > Netory > Open Netory to launch the browser.
+-Use Start > Netory > Configure Netory to change the port or network access.
++Use Start > Netory > Configure Netory to change the port, network access, HTTPS or server certificate.
+ You can also manage Netory from the Windows Services application.
++During update/configuration, administrator fields are intentionally read-only.
++Existing accounts are preserved; change account passwords inside Netory.
++Network and HTTPS settings remain editable. Storage locations are preserved
++during updates/configuration; this does not migrate an existing database.
+ 
+ Local-only access is the default. The optional private-network setting binds
+ IPv4 network interfaces and opens only the selected TCP port for Windows Private
+-profiles and local-subnet clients. Use an HTTPS reverse proxy before exposing
+-Netory to the Internet or using real AI provider credentials. Local HTTP uses
+-COOKIE_SECURE=false. TLS/certificate/domain provisioning is not part of setup.
++profiles and local-subnet clients.
++
++HTTPS AND CERTIFICATES
++HTTPS is served directly by Netory; a reverse proxy is optional. Import a
++CA-issued PFX/P12 containing the server private key and intermediate chain.
++The DNS name/IP must match the certificate SAN and resolve to this computer.
++IPv4 addresses and DNS names are supported; IPv6 certificate names are not.
++The installer checks certificate dates, identity and key matching. It does not
++issue public certificates, configure DNS or add certificates to Windows trust.
++For a private CA, your administrator must deploy its root certificate to client
++trust stores. Including a root in a PFX alone does not make browsers trust it.
++Use Configure Netory to enable/disable HTTPS or replace/renew the certificate.
++Leave the certificate field blank to retain the installed certificate; select a
++new PFX and enter its password to replace it. Passwords are passed over stdin
++and never saved. The exported service key is protected by Windows permissions:
++only administrators, SYSTEM and the service can read it. Keep backups secure.
++HTTPS automatically enables secure login cookies; HTTP disables that flag.
++Existing secure cookies may require clearing site cookies after switching to HTTP.
++The local readiness check validates against the installed certificate only;
++it does not prove that remote browsers trust the issuing CA.
+ 
+ FILES AND BACKUPS
++Default locations (custom choices appear in setup and are remembered):
+ Program: C:\Program Files\Netory
+ Data/config/keys: C:\ProgramData\Netory
+ Database: C:\ProgramData\Netory\db\netory.db
+@@ -49,12 +76,12 @@ an unrelated custom Netory deployment or change program files manually.
+ UNINSTALL
+ Use Windows installed apps > Netory, or Start > Netory > Uninstall Netory.
+ Uninstall removes the service, program and firewall rule. Data/config/backups stay
+-in C:\ProgramData\Netory so they can be restored or reused. Delete them manually
++in the selected data folder so they can be restored or reused. Delete them manually
+ only when you are certain you no longer need the database and encryption keys.
+ 
+ TROUBLESHOOTING
+ Choose a different port if it is already in use. Check setup.log and service logs
+-in C:\ProgramData\Netory\logs. Administrative rights are required for setup,
++in the logs subfolder of the selected data folder. Administrative rights are required for setup,
+ configuration and removal. If organizational PowerShell/AppLocker policy blocks
+ the installer, contact your administrator; setup does not change those policies.
+ The installer is not Authenticode-signed; only run the package supplied by your
+diff --git a/deploy/windows/Setup.ps1 b/deploy/windows/Setup.ps1
+index ba8f869..baa3be6 100644
+--- a/deploy/windows/Setup.ps1
++++ b/deploy/windows/Setup.ps1
+@@ -6,7 +6,7 @@ if ($env:OS -ne 'Windows_NT') { throw 'Run this installer on 64-bit Windows.' }
+ if (-not [Environment]::Is64BitProcess) { throw 'Run Install.cmd or Netory-Setup.exe to use 64-bit PowerShell.' }
+ $principal=New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
+ if (-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+-    $arguments='-NoProfile -ExecutionPolicy Bypass -File "'+$PSCommandPath+'" -Mode '+$Mode
++    $arguments='-STA -NoProfile -ExecutionPolicy Bypass -File "'+$PSCommandPath+'" -Mode '+$Mode
+     $elevated=Start-Process -FilePath "$PSHOME\powershell.exe" -ArgumentList $arguments -Verb RunAs -Wait -PassThru
+     exit $elevated.ExitCode
+ }
+@@ -14,6 +14,10 @@ Add-Type -AssemblyName System.Windows.Forms
+ Add-Type -AssemblyName System.Drawing
+ $InstallRoot=Join-Path $env:ProgramFiles 'Netory'
+ $DataRoot=Join-Path $env:ProgramData 'Netory'
++# Locate custom storage on updates, configuration and uninstall.
++$location=Get-ItemProperty 'HKLM:\Software\Netory' -ErrorAction SilentlyContinue
++if($location){$InstallRoot=[string]$location.InstallRoot;$DataRoot=[string]$location.DataRoot}
++$Https=$false;$Hostname='localhost';$Certificate='';$CertificatePassword=''
+ $ServiceExe=Join-Path $InstallRoot 'service\Netory.exe'
+ $SettingsPath=Join-Path $DataRoot 'settings.json'
+ $FirewallName='Netory-Private-LAN'
+@@ -29,10 +33,11 @@ function Stop-Netory {
+ function Protect-Data {
+     New-Item -ItemType Directory -Path $DataRoot -Force | Out-Null
+     Run-Checked icacls.exe @($DataRoot,'/inheritance:r','/grant:r','*S-1-5-18:(OI)(CI)F','*S-1-5-32-544:(OI)(CI)F','*S-1-5-19:(OI)(CI)RX')
+-    foreach ($name in @('db','logs','backups')) {
++    foreach ($name in @('db','logs','backups','tls')) {
+         $directory=Join-Path $DataRoot $name
+         New-Item -ItemType Directory -Path $directory -Force | Out-Null
+-        if ($name -ne 'backups') { Run-Checked icacls.exe @($directory,'/grant:r','*S-1-5-19:(OI)(CI)M') }
++        if ($name -eq 'tls') { Run-Checked icacls.exe @($directory,'/inheritance:r','/grant:r','*S-1-5-18:(OI)(CI)F','*S-1-5-32-544:(OI)(CI)F','*S-1-5-19:(OI)(CI)RX') }
++        elseif ($name -ne 'backups') { Run-Checked icacls.exe @($directory,'/grant:r','*S-1-5-19:(OI)(CI)M') }
+         else { Run-Checked icacls.exe @($directory,'/inheritance:r','/grant:r','*S-1-5-18:(OI)(CI)F','*S-1-5-32-544:(OI)(CI)F') }
+     }
+ }
+@@ -53,7 +58,7 @@ function Run-Python([string]$Python,[string]$Arguments,[string]$InputJson='') {
+     while(-not $process.WaitForExit(150)){[Windows.Forms.Application]::DoEvents()}
+     $output=$stdout.GetAwaiter().GetResult(); $errors=$stderr.GetAwaiter().GetResult()
+     [IO.File]::AppendAllText((Join-Path $DataRoot 'logs\setup.log'),$output+$errors,$Utf8)
+-    if ($process.ExitCode -ne 0) { throw 'Database/runtime setup failed. See C:\ProgramData\Netory\logs\setup.log for details.' }
++    if ($process.ExitCode -ne 0) { throw ("Setup check failed. See "+(Join-Path $DataRoot 'logs\setup.log')+' for details.') }
+ }
+ function Write-Service([int]$Port,[bool]$Lan) {
+     $escape={param($v)[Security.SecurityElement]::Escape([string]$v)}
+@@ -61,11 +66,13 @@ function Write-Service([int]$Port,[bool]$Lan) {
+     $working=& $escape $DataRoot
+     $logpath=& $escape (Join-Path $DataRoot 'logs')
+     $bind=if($Lan){'0.0.0.0'}else{'127.0.0.1'}
++    $tlsArguments=''
++    if($Https){$tlsArguments=' --ssl-certfile &quot;'+(& $escape (Join-Path $DataRoot 'tls\server.pem'))+'&quot; --ssl-keyfile &quot;'+(& $escape (Join-Path $DataRoot 'tls\server.key'))+'&quot;'}
+     $xml=@"
+ <service>
+  <id>Netory</id><name>Netory</name><description>Netory IT inventory application</description>
+  <executable>$python</executable>
+- <arguments>-m uvicorn backend.main:app --host $bind --port $Port --workers 1 --no-server-header</arguments>
++ <arguments>-m uvicorn backend.main:app --host $bind --port $Port --workers 1 --no-server-header$tlsArguments</arguments>
+  <workingdirectory>$working</workingdirectory>
+  <env name="PYTHONUTF8" value="1"/><env name="PYTHONDONTWRITEBYTECODE" value="1"/>
+  <startmode>Automatic</startmode><stoptimeout>30 sec</stoptimeout>
+@@ -82,29 +89,39 @@ function Update-Firewall([int]$Port,[bool]$Lan) {
+ }
+ function Wait-Netory([int]$Port) {
+     for($attempt=0;$attempt -lt 40;$attempt++) {
+-        try { $response=Invoke-WebRequest -Uri "http://127.0.0.1:$Port/" -UseBasicParsing -TimeoutSec 2; if($response.StatusCode -eq 200 -and $response.Content.Contains('id="auth-root"') -and (Get-Service Netory).Status -eq 'Running'){return} } catch {}
++        try {
++            Run-Python (Join-Path $InstallRoot 'runtime\python.exe') ('"'+(Join-Path $InstallRoot 'tools\bootstrap.py')+'" health --app "'+(Join-Path $InstallRoot 'app')+'" --data "'+$DataRoot+'"') (@{port=$Port;https=$Https;hostname=$Hostname}|ConvertTo-Json -Compress)
++            if((Get-Service Netory).Status -eq 'Running'){return}
++        } catch {}
+         [Windows.Forms.Application]::DoEvents()
+         Start-Sleep -Milliseconds 500
+     }
+-    throw 'The service did not become ready. Check the logs in C:\ProgramData\Netory\logs.'
++    throw ('The service did not become ready. Check '+(Join-Path $DataRoot 'logs'))
++}
++function Get-NetoryUrl([int]$Port) {
++    if($Https){return "https://${Hostname}:$Port/"}
++    return "http://127.0.0.1:$Port/"
+ }
+ function Create-Shortcuts([int]$Port) {
+     $menu=Join-Path ([Environment]::GetFolderPath('CommonPrograms')) 'Netory'
+     New-Item -ItemType Directory -Path $menu -Force | Out-Null
+-    [IO.File]::WriteAllText((Join-Path $menu 'Open Netory.url'),"[InternetShortcut]`r`nURL=http://127.0.0.1:$Port/`r`n",$Utf8)
++    [IO.File]::WriteAllText((Join-Path $menu 'Open Netory.url'),"[InternetShortcut]`r`nURL=$(Get-NetoryUrl $Port)`r`n",$Utf8)
+     $shell=New-Object -ComObject WScript.Shell
+     foreach($entry in @(@('Configure Netory','Configure'),@('Uninstall Netory','Uninstall'))) {
+         $shortcut=$shell.CreateShortcut((Join-Path $menu ($entry[0]+'.lnk')))
+         $shortcut.TargetPath="$PSHOME\powershell.exe"
+-        $shortcut.Arguments='-NoProfile -ExecutionPolicy Bypass -File "'+(Join-Path $InstallRoot 'Setup.ps1')+'" -Mode '+$entry[1]
++        $shortcut.Arguments='-STA -NoProfile -ExecutionPolicy Bypass -File "'+(Join-Path $InstallRoot 'Setup.ps1')+'" -Mode '+$entry[1]
+         $shortcut.Save()
+     }
++    New-Item 'HKLM:\Software\Netory' -Force | Out-Null
++    New-ItemProperty 'HKLM:\Software\Netory' -Name InstallRoot -Value $InstallRoot -PropertyType String -Force | Out-Null
++    New-ItemProperty 'HKLM:\Software\Netory' -Name DataRoot -Value $DataRoot -PropertyType String -Force | Out-Null
+     $registry='HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\Netory'
+     New-Item $registry -Force | Out-Null
+     New-ItemProperty $registry -Name DisplayName -Value 'Netory' -PropertyType String -Force | Out-Null
+     New-ItemProperty $registry -Name Publisher -Value 'Netory' -PropertyType String -Force | Out-Null
+     New-ItemProperty $registry -Name InstallLocation -Value $InstallRoot -PropertyType String -Force | Out-Null
+-    New-ItemProperty $registry -Name UninstallString -Value ('"'+$PSHOME+'\powershell.exe" -NoProfile -ExecutionPolicy Bypass -File "'+(Join-Path $InstallRoot 'Setup.ps1')+'" -Mode Uninstall') -PropertyType String -Force | Out-Null
++    New-ItemProperty $registry -Name UninstallString -Value ('"'+$PSHOME+'\powershell.exe" -STA -NoProfile -ExecutionPolicy Bypass -File "'+(Join-Path $InstallRoot 'Setup.ps1')+'" -Mode Uninstall') -PropertyType String -Force | Out-Null
+ }
+ function Install-Netory([int]$Port,[bool]$Lan,[string]$Username,[string]$Password) {
+     $existing=Get-Service Netory -ErrorAction SilentlyContinue
+@@ -128,6 +145,7 @@ function Install-Netory([int]$Port,[bool]$Lan,[string]$Username,[string]$Passwor
+             New-Item -ItemType Directory -Path $stage | Out-Null
+             Copy-Item (Join-Path $PSScriptRoot 'payload\*') $stage -Recurse -Force
+             Copy-Item $PSCommandPath (Join-Path $stage 'Setup.ps1')
++            Copy-Item (Join-Path $PSScriptRoot 'SetupForm.ps1') (Join-Path $stage 'SetupForm.ps1')
+             $vc=Join-Path $stage 'prerequisites\vc_redist.x64.exe'
+             $signature=Get-AuthenticodeSignature -LiteralPath $vc
+             if($signature.Status -ne 'Valid' -or $signature.SignerCertificate.Subject -notmatch 'Microsoft Corporation'){throw 'The Microsoft runtime installer signature could not be verified.'}
+@@ -151,15 +169,20 @@ function Install-Netory([int]$Port,[bool]$Lan,[string]$Username,[string]$Passwor
+             New-Item -ItemType Directory -Path $backupPath -Force | Out-Null
+             Copy-Item (Join-Path $InstallRoot 'service\Netory.xml') (Join-Path $backupPath 'Netory.xml')
+         }
++        New-Item -ItemType Directory -Path $backupPath -Force | Out-Null
++        if(Test-Path (Join-Path $DataRoot 'tls\server.pem')){Copy-Item (Join-Path $DataRoot 'tls\server.*') $backupPath}
++        if($Https){
++            Run-Python (Join-Path $InstallRoot 'runtime\python.exe') ('"'+(Join-Path $InstallRoot 'tools\bootstrap.py')+'" certificate --app "'+(Join-Path $InstallRoot 'app')+'" --data "'+$DataRoot+'"') (@{hostname=$Hostname;certificate=$Certificate;certificate_password=$CertificatePassword}|ConvertTo-Json -Compress)
++        }
+         Run-Checked icacls.exe @($InstallRoot,'/grant:r','*S-1-5-19:(OI)(CI)RX')
+-        Run-Python (Join-Path $InstallRoot 'runtime\python.exe') ('"'+(Join-Path $InstallRoot 'tools\bootstrap.py')+'" setup --app "'+(Join-Path $InstallRoot 'app')+'" --data "'+$DataRoot+'"') (@{username=$Username;password=$Password}|ConvertTo-Json -Compress)
++        Run-Python (Join-Path $InstallRoot 'runtime\python.exe') ('"'+(Join-Path $InstallRoot 'tools\bootstrap.py')+'" setup --app "'+(Join-Path $InstallRoot 'app')+'" --data "'+$DataRoot+'"') (@{username=$Username;password=$Password;https=$Https}|ConvertTo-Json -Compress)
+         Run-Checked icacls.exe @((Join-Path $DataRoot '.env'),'/inheritance:r','/grant:r','*S-1-5-18:F','*S-1-5-32-544:F','*S-1-5-19:R')
+         Write-Service $Port $Lan
+         if(-not $existing){Run-Checked $ServiceExe @('install');$createdService=$true}
+         Start-Service Netory
+         Wait-Netory $Port
+         Update-Firewall $Port $Lan
+-        [IO.File]::WriteAllText($SettingsPath,(@{port=$Port;lan=$Lan}|ConvertTo-Json),$Utf8)
++        [IO.File]::WriteAllText($SettingsPath,(@{port=$Port;lan=$Lan;https=$Https;hostname=$Hostname;installRoot=$InstallRoot;dataRoot=$DataRoot}|ConvertTo-Json),$Utf8)
+         Create-Shortcuts $Port
+         $started=$true
+         if($moved){Remove-Item $previous -Recurse -Force}
+@@ -174,6 +197,9 @@ function Install-Netory([int]$Port,[bool]$Lan,[string]$Username,[string]$Passwor
+                 foreach($suffix in @('-wal','-shm')){Remove-Item ((Join-Path $DataRoot 'db\netory.db')+$suffix) -ErrorAction SilentlyContinue}
+                 Copy-Item (Join-Path $backupPath 'netory.db') (Join-Path $DataRoot 'db\netory.db') -Force
+             }
++            foreach($tlsFile in @('server.pem','server.key')){
++                if(Test-Path (Join-Path $backupPath $tlsFile)){Copy-Item (Join-Path $backupPath $tlsFile) (Join-Path $DataRoot ('tls\'+$tlsFile)) -Force}
++            }
+             if($Mode -eq 'Configure' -and (Test-Path (Join-Path $backupPath 'Netory.xml'))){Copy-Item (Join-Path $backupPath 'Netory.xml') (Join-Path $InstallRoot 'service\Netory.xml') -Force}
+             if($oldSettings){Update-Firewall ([int]$oldSettings.port) ([bool]$oldSettings.lan);[IO.File]::WriteAllText($SettingsPath,($oldSettings|ConvertTo-Json),$Utf8)}
+             if($existing){Start-Service Netory}
+@@ -182,7 +208,7 @@ function Install-Netory([int]$Port,[bool]$Lan,[string]$Username,[string]$Passwor
+     } finally {if(Test-Path $stage){Remove-Item $stage -Recurse -Force}}
+ }
+ if($Mode -eq 'Uninstall') {
+-    if([Windows.Forms.MessageBox]::Show('Remove the Netory service and program? The database, encryption keys and backups will be kept in C:\ProgramData\Netory.','Uninstall Netory','YesNo','Question') -ne 'Yes'){exit 0}
++    if([Windows.Forms.MessageBox]::Show(("Remove the Netory service and program? Database, encryption keys and backups will be kept in $DataRoot."),'Uninstall Netory','YesNo','Question') -ne 'Yes'){exit 0}
+     Stop-Netory
+     if(Get-Service Netory -ErrorAction SilentlyContinue){Run-Checked $ServiceExe @('uninstall')}
+     Get-NetFirewallRule -Name $FirewallName -ErrorAction SilentlyContinue | Remove-NetFirewallRule
+@@ -192,30 +218,51 @@ if($Mode -eq 'Uninstall') {
+     [Windows.Forms.MessageBox]::Show('Netory removed. Your database and configuration have been kept.','Netory') | Out-Null
+     exit 0
+ }
+-$form=New-Object Windows.Forms.Form
+-$form.Text='Netory Setup';$form.Size=New-Object Drawing.Size(525,435);$form.StartPosition='CenterScreen';$form.FormBorderStyle='FixedDialog';$form.MaximizeBox=$false
+-function Add-Label([string]$Text,[int]$Y){$label=New-Object Windows.Forms.Label;$label.Text=$Text;$label.Location=New-Object Drawing.Point(22,$Y);$label.Size=New-Object Drawing.Size(460,30);$form.Controls.Add($label)}
+-function Add-Text([int]$Y,[bool]$Secret=$false){$control=New-Object Windows.Forms.TextBox;$control.Location=New-Object Drawing.Point(235,$Y);$control.Width=240;$control.UseSystemPasswordChar=$Secret;$form.Controls.Add($control);return $control}
+-Add-Label 'Netory: Python, SQLite and Windows service included.' 18
+-Add-Label 'Network port' 65;$portBox=Add-Text 63;$portBox.Text='8000'
+-$lanBox=New-Object Windows.Forms.CheckBox;$lanBox.Text='Allow access from the private local network';$lanBox.Location=New-Object Drawing.Point(22,105);$lanBox.Width=460;$form.Controls.Add($lanBox)
+-Add-Label 'Administrator username' 154;$nameBox=Add-Text 152;$nameBox.Text='admin'
+-Add-Label 'Password (14+ characters)' 196;$passwordBox=Add-Text 194 $true
+-Add-Label 'Confirm password' 238;$confirmBox=Add-Text 236 $true
+-Add-Label 'Local access by default. Internet access requires an HTTPS proxy.' 278
+-$installButton=New-Object Windows.Forms.Button;$installButton.Text='Install Netory';$installButton.Location=New-Object Drawing.Point(300,330);$installButton.Size=New-Object Drawing.Size(175,35);$form.Controls.Add($installButton);$form.AcceptButton=$installButton
+-if(Test-Path $SettingsPath){$saved=Get-Content $SettingsPath -Raw|ConvertFrom-Json;$portBox.Text=[string]$saved.port;$lanBox.Checked=[bool]$saved.lan;$nameBox.Enabled=$false;$passwordBox.Enabled=$false;$confirmBox.Enabled=$false;$installButton.Text=if($Mode -eq 'Configure'){'Save and restart'}else{'Update Netory'};Add-Label 'Existing accounts and data will be preserved.' 306}
++[Windows.Forms.Application]::EnableVisualStyles()
++. (Join-Path $PSScriptRoot 'SetupForm.ps1')
++$saved=$null
++if(Test-Path $SettingsPath){$saved=Get-Content $SettingsPath -Raw|ConvertFrom-Json}
++$window=New-NetorySetupForm -SavedSettings $saved -Mode $Mode -InstallRoot $InstallRoot -DataRoot $DataRoot
++$form=$window.Form;$fieldsPanel=$window.FieldsPanel
++$portBox=$window.Port;$lanBox=$window.Lan;$nameBox=$window.Username
++$passwordBox=$window.Password;$confirmBox=$window.Confirm
++$installButton=$window.Install;$cancelButton=$window.Cancel
+ $installButton.Add_Click({
+     try {
+         $port=0;if(-not [int]::TryParse($portBox.Text,[ref]$port) -or $port -lt 1 -or $port -gt 65535){throw 'Enter a port between 1 and 65535.'}
+         if($passwordBox.Enabled -and ($passwordBox.Text.Length -lt 14 -or $passwordBox.Text -cne $confirmBox.Text -or -not $nameBox.Text.Trim())){throw 'Enter a username and matching passwords of at least 14 characters.'}
+-        $installButton.Enabled=$false;$form.UseWaitCursor=$true;$form.Text='Netory Setup - working...';$form.Refresh()
++        if(-not $saved){
++            $application=[IO.Path]::GetFullPath($window.Application.Text.Trim()).TrimEnd('\')
++            $data=[IO.Path]::GetFullPath($window.Data.Text.Trim()).TrimEnd('\')
++            foreach($path in @($application,$data)){
++                if($path -notmatch '^[A-Za-z]:\\.+') {throw 'Choose dedicated folders on a local drive, not a drive root or network share.'}
++                foreach($reserved in @($env:windir,$env:ProgramFiles,${env:ProgramFiles(x86)},$env:ProgramData)){
++                    if($reserved -and ($path.Equals($reserved,[StringComparison]::OrdinalIgnoreCase) -or ($reserved -eq $env:windir -and $path.StartsWith($reserved+'\',[StringComparison]::OrdinalIgnoreCase)))){throw 'Choose a dedicated Netory folder, not a Windows system folder.'}
++                }
++                if($path.Contains('"')){throw 'Folder names cannot contain quotation marks.'}
++                $drive=New-Object IO.DriveInfo([IO.Path]::GetPathRoot($path))
++                if($drive.DriveType -ne 'Fixed'){throw 'Use a fixed local disk for the application and database.'}
++            }
++            if($application.Equals($data,[StringComparison]::OrdinalIgnoreCase) -or $data.StartsWith($application+'\',[StringComparison]::OrdinalIgnoreCase) -or $application.StartsWith($data+'\',[StringComparison]::OrdinalIgnoreCase)){throw 'Application and data folders must be separate and must not contain one another.'}
++            if((Test-Path $application) -and @(Get-ChildItem $application -Force).Count -and -not (Get-Service Netory -ErrorAction SilentlyContinue)){throw 'Choose an empty application folder.'}
++            if((Test-Path $data) -and @(Get-ChildItem $data -Force).Count -and -not ((Test-Path (Join-Path $data '.env')) -and (Test-Path (Join-Path $data 'db\netory.db')))){throw 'Choose an empty data folder or an existing Netory data folder containing .env and db/netory.db.'}
++            if($application -ne $InstallRoot -and (Get-Service Netory -ErrorAction SilentlyContinue)){throw 'An existing service must be updated in its current application folder.'}
++            $script:InstallRoot=$application;$script:DataRoot=$data
++            $script:ServiceExe=Join-Path $InstallRoot 'service\Netory.exe'
++            $script:SettingsPath=Join-Path $DataRoot 'settings.json'
++        }
++        $script:Https=$window.Https.Checked;$script:Hostname=$window.Hostname.Text.Trim()
++        $script:Certificate=$window.Certificate.Text.Trim();$script:CertificatePassword=$window.CertificatePassword.Text
++        if($Https -and (-not $Hostname -or $Hostname -match '[^a-zA-Z0-9.\-]')){throw 'Enter the certificate DNS name or IPv4 address without a scheme, port or path.'}
++        if($Https -and -not $Certificate -and -not (Test-Path (Join-Path $DataRoot 'tls\server.pem'))){throw 'Choose a PFX certificate with its private key to enable HTTPS.'}
++        if($Https -and $Certificate -and -not (Test-Path -LiteralPath $Certificate -PathType Leaf)){throw 'The selected certificate file does not exist.'}
++        $installButton.Enabled=$false;$cancelButton.Enabled=$false;$fieldsPanel.Enabled=$false;$form.UseWaitCursor=$true;$form.Text='Netory Setup - working...';$form.Refresh()
+         Install-Netory $port $lanBox.Checked $nameBox.Text $passwordBox.Text
+-        $passwordBox.Clear();$confirmBox.Clear()
+-        [Windows.Forms.MessageBox]::Show("Netory is running at http://127.0.0.1:$port/`nUse the Start menu shortcuts to open or configure it.",'Netory installed')|Out-Null
+-        $form.UseWaitCursor=$false;$form.Close();Start-Process "http://127.0.0.1:$port/"
++        $passwordBox.Clear();$confirmBox.Clear();$window.CertificatePassword.Clear();$script:CertificatePassword=''
++        [Windows.Forms.MessageBox]::Show("Netory is running at $(Get-NetoryUrl $port)`nUse the Start menu shortcuts to open or configure it.",'Netory installed')|Out-Null
++        $form.UseWaitCursor=$false;$form.Close();Start-Process (Get-NetoryUrl $port)
+     } catch { [Windows.Forms.MessageBox]::Show($_.Exception.Message,'Netory Setup','OK','Error')|Out-Null }
+-    finally {$form.UseWaitCursor=$false;$installButton.Enabled=$true;$form.Text='Netory Setup'}
++    finally {$form.UseWaitCursor=$false;$fieldsPanel.Enabled=$true;$cancelButton.Enabled=$true;$installButton.Enabled=$true;$form.Text='Netory Setup'}
+ })
+ $form.Add_FormClosing({param($sender,$eventArgs) if($form.UseWaitCursor){$eventArgs.Cancel=$true}})
+ [void]$form.ShowDialog()
+diff --git a/deploy/windows/Test-Installation.ps1 b/deploy/windows/Test-Installation.ps1
+index 93152ff..3f32f25 100644
+--- a/deploy/windows/Test-Installation.ps1
++++ b/deploy/windows/Test-Installation.ps1
+@@ -1,13 +1,19 @@
+ # Run in an elevated Windows PowerShell after completing installation.
+ $ErrorActionPreference='Stop'
+-$settings=Get-Content "$env:ProgramData\Netory\settings.json" -Raw|ConvertFrom-Json
++$installRoot=Join-Path $env:ProgramFiles 'Netory'
++$dataRoot=Join-Path $env:ProgramData 'Netory'
++$location=Get-ItemProperty 'HKLM:\Software\Netory' -ErrorAction SilentlyContinue
++if($location){$installRoot=$location.InstallRoot;$dataRoot=$location.DataRoot}
++$settings=Get-Content (Join-Path $dataRoot 'settings.json') -Raw|ConvertFrom-Json
+ $service=Get-CimInstance Win32_Service -Filter "Name='Netory'"
+ if(-not $service -or $service.State -ne 'Running'){throw 'Netory service is not running.'}
+ if($service.StartMode -ne 'Auto'){throw 'Service startup is not automatic.'}
+ if($service.StartName -notmatch 'LocalService|LOCAL SERVICE'){throw 'Service is not using the restricted LocalService identity.'}
+-$response=Invoke-WebRequest "http://127.0.0.1:$($settings.port)/" -UseBasicParsing
+-if($response.StatusCode -ne 200 -or -not $response.Content.Contains('id="auth-root"')){throw 'Netory did not serve its application page.'}
+-if(-not (Test-Path "$env:ProgramData\Netory\db\netory.db")){throw 'Database is missing.'}
+-if(-not (Test-Path "$env:ProgramData\Netory\.env")){throw 'Application configuration is missing.'}
+-Write-Host "Netory service, account, startup, HTTP port $($settings.port), database and configuration passed."
++$https=$false;$hostname='localhost'
++if($settings.PSObject.Properties['https']){$https=[bool]$settings.https;$hostname=$settings.hostname}
++@{port=$settings.port;https=$https;hostname=$hostname}|ConvertTo-Json -Compress | & "$installRoot\runtime\python.exe" "$installRoot\tools\bootstrap.py" health --app "$installRoot\app" --data $dataRoot
++if($LASTEXITCODE -ne 0){throw 'Netory did not serve its application page.'}
++if(-not (Test-Path "$dataRoot\db\netory.db")){throw 'Database is missing.'}
++if(-not (Test-Path "$dataRoot\.env")){throw 'Application configuration is missing.'}
++Write-Host "Netory service, account, startup, HTTP/HTTPS port $($settings.port), database and configuration passed."
+ Write-Host 'Next: sign in, create a client/asset, change the port, restart Windows, test update and uninstall preservation on a test PC.'
+diff --git a/deploy/windows/Uninstall.cmd b/deploy/windows/Uninstall.cmd
+index 2ab20b3..7a627ec 100644
+--- a/deploy/windows/Uninstall.cmd
++++ b/deploy/windows/Uninstall.cmd
+@@ -2,5 +2,5 @@
+ setlocal
+ set "NETORY_PS=%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe"
+ if exist "%SystemRoot%\Sysnative\WindowsPowerShell\v1.0\powershell.exe" set "NETORY_PS=%SystemRoot%\Sysnative\WindowsPowerShell\v1.0\powershell.exe"
+-"%NETORY_PS%" -NoProfile -ExecutionPolicy Bypass -File "%~dp0Setup.ps1" -Mode Uninstall
++"%NETORY_PS%" -STA -NoProfile -ExecutionPolicy Bypass -File "%~dp0Setup.ps1" -Mode Uninstall
+ if errorlevel 1 pause
+diff --git a/deploy/windows/bootstrap.py b/deploy/windows/bootstrap.py
+index 5e9f614..cfd1be5 100644
+--- a/deploy/windows/bootstrap.py
++++ b/deploy/windows/bootstrap.py
+@@ -31,7 +31,7 @@ def setup(app: Path, data: Path, parameters: dict):
+     if values.get('DATABASE_URL') and values['DATABASE_URL'] != database_url:
+         raise ValueError('This installer manages its own SQLite database. Existing custom database configuration was preserved; contact your administrator.')
+     values['DATABASE_URL'] = database_url
+-    values.setdefault('COOKIE_SECURE', 'false')
++    values['COOKIE_SECURE'] = 'true' if parameters.get('https', False) else 'false'
+     values.setdefault('WLAN_ENCRYPTION_KEY', Fernet.generate_key().decode())
+     values.setdefault('AI_ENCRYPTION_KEY', Fernet.generate_key().decode())
+     temporary = config.with_suffix('.tmp')
+@@ -64,9 +64,101 @@ def setup(app: Path, data: Path, parameters: dict):
+     print('Database prepared and first administrator created.')
+ 
+ 
++def certificate(data: Path, parameters: dict):
++    """Import a PFX without retaining its password; validate identity using OpenSSL."""
++    from datetime import datetime, timezone
++    import ssl
++    from cryptography.hazmat.primitives.serialization import pkcs12, Encoding, PrivateFormat, NoEncryption
++    import ipaddress
++    hostname = str(parameters.get('hostname', 'localhost')).strip()
++    if not hostname or any(c in hostname for c in '/\\: \r\n\t"'):
++        raise ValueError('Enter a DNS name or IPv4 address without a scheme, port or path.')
++    try:
++        ipaddress.ip_address(hostname)
++    except ValueError:
++        hostname = hostname.encode('idna').decode('ascii')
++        if any(not part or len(part) > 63 or part.startswith('-') or part.endswith('-') or
++               any(not (c.isalnum() or c == '-') for c in part) for part in hostname.split('.')):
++            raise ValueError('Invalid certificate DNS name.')
++    tls = data / 'tls'
++    tls.mkdir(exist_ok=True)
++    source = parameters.get('certificate')
++    if source:
++        password = parameters.get('certificate_password', '')
++        try:
++            key, cert, chain = pkcs12.load_key_and_certificates(Path(source).read_bytes(), password.encode('utf-8') if password else None)
++        except ValueError:
++            raise ValueError('Cannot open the PFX. Check its password and format.') from None
++        if key is None or cert is None:
++            raise ValueError('The PFX must include the server certificate and its private key.')
++        now = datetime.now(timezone.utc)
++        if not cert.not_valid_before_utc <= now <= cert.not_valid_after_utc:
++            raise ValueError('The server certificate is expired or not yet valid.')
++        cert_bytes = cert.public_bytes(Encoding.PEM) + b''.join(c.public_bytes(Encoding.PEM) for c in chain or [])
++        key_bytes = key.private_bytes(Encoding.PEM, PrivateFormat.PKCS8, NoEncryption())
++    else:
++        cert_bytes = (tls / 'server.pem').read_bytes()
++        key_bytes = (tls / 'server.key').read_bytes()
++    # A temporary local TLS handshake verifies key matching, dates and SAN identity.
++    # The installed certificate is trusted only for this setup check, never globally.
++    import tempfile
++    import socket
++    import threading
++    with tempfile.TemporaryDirectory(dir=tls) as directory:
++        cert_path, key_path = Path(directory) / 'cert.pem', Path(directory) / 'key.pem'
++        cert_path.write_bytes(cert_bytes); key_path.write_bytes(key_bytes)
++        server = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
++        server.load_cert_chain(str(cert_path), str(key_path))
++        client = ssl.create_default_context(cafile=str(cert_path))
++        client.verify_flags |= ssl.VERIFY_X509_PARTIAL_CHAIN
++        listener = socket.socket(); listener.bind(('127.0.0.1', 0)); listener.listen(1); listener.settimeout(5)
++        def accept():
++            try:
++                connection, _ = listener.accept()
++                with connection, server.wrap_socket(connection, server_side=True):
++                    pass
++            except (OSError, ssl.SSLError):
++                pass
++        worker = threading.Thread(target=accept, daemon=True); worker.start()
++        try:
++            with socket.create_connection(listener.getsockname(), timeout=5) as connection:
++                with client.wrap_socket(connection, server_hostname=hostname):
++                    pass
++        finally:
++            listener.close(); worker.join(timeout=6)
++    (tls / 'server.pem').write_bytes(cert_bytes)
++    (tls / 'server.key').write_bytes(key_bytes)
++    print('HTTPS certificate validated and installed.')
++
++
++def health(data: Path, parameters: dict):
++    import socket
++    import ssl
++    port = int(parameters['port'])
++    hostname = parameters.get('hostname', 'localhost')
++    connection = socket.create_connection(('127.0.0.1', port), timeout=3)
++    if parameters.get('https'):
++        context = ssl.create_default_context(cafile=str(data / 'tls' / 'server.pem'))
++        context.verify_flags |= ssl.VERIFY_X509_PARTIAL_CHAIN
++        connection = context.wrap_socket(connection, server_hostname=hostname)
++    with connection:
++        connection.sendall(f'GET / HTTP/1.1\r\nHost: {hostname}\r\nConnection: close\r\n\r\n'.encode('ascii'))
++        response = b''
++        while True:
++            block = connection.recv(65536)
++            if not block:
++                break
++            response += block
++            if len(response) > 4_000_000:
++                break
++        if not response.startswith(b'HTTP/1.1 200') or b'id="auth-root"' not in response:
++            raise ValueError('Netory login page is not ready.')
++    print('Netory login page is ready.')
++
++
+ def main():
+     parser = argparse.ArgumentParser()
+-    parser.add_argument('operation', choices=['setup', 'backup'])
++    parser.add_argument('operation', choices=['setup', 'backup', 'certificate', 'health'])
+     parser.add_argument('--app', type=Path, required=True)
+     parser.add_argument('--data', type=Path, required=True)
+     parser.add_argument('--destination', type=Path)
+@@ -76,7 +168,13 @@ def main():
+             raise ValueError('Backup destination is required')
+         backup(args.data, args.destination)
+     else:
+-        setup(args.app.resolve(), args.data.resolve(), json.load(__import__('sys').stdin))
++        parameters = json.load(__import__('sys').stdin)
++        if args.operation == 'certificate':
++            certificate(args.data.resolve(), parameters)
++        elif args.operation == 'health':
++            health(args.data.resolve(), parameters)
++        else:
++            setup(args.app.resolve(), args.data.resolve(), parameters)
+ 
+ 
+ if __name__ == '__main__':
+diff --git a/deploy/windows/build.py b/deploy/windows/build.py
+index 5697cbb..d05b385 100644
+--- a/deploy/windows/build.py
++++ b/deploy/windows/build.py
+@@ -74,7 +74,7 @@ def build(output, cache, makensis=None, nsisdir=None):
+     prerequisites=bundle/'payload'/'prerequisites';prerequisites.mkdir()
+     vcredist=download(VC_URL,cache/'vc_redist.x64.exe');shutil.copyfile(vcredist,prerequisites/'vc_redist.x64.exe')
+     tools=bundle/'payload'/'tools';tools.mkdir();shutil.copyfile(HERE/'bootstrap.py',tools/'bootstrap.py')
+-    for name in ['Install.cmd','Uninstall.cmd','Setup.ps1','README.txt']:
++    for name in ['Install.cmd','Uninstall.cmd','Setup.ps1','SetupForm.ps1','README.txt']:
+         shutil.copyfile(HERE/name,bundle/name)
+     installed=runtime/'Lib'/'site-packages'
+     distributions=[]
+@@ -101,7 +101,7 @@ def build(output, cache, makensis=None, nsisdir=None):
+     shutil.copyfile(HERE/'README.txt',output/'README.txt')
+     shutil.copyfile(Path(__file__),output/'build.py')
+     source=output/'installer-source';source.mkdir(exist_ok=True)
+-    for name in ['Setup.ps1','bootstrap.py','Install.cmd','Uninstall.cmd','setup.nsi','README.txt','Test-Installation.ps1']:
++    for name in ['Setup.ps1','SetupForm.ps1','bootstrap.py','Install.cmd','Uninstall.cmd','setup.nsi','README.txt','Test-Installation.ps1','Test-SetupForm.ps1']:
+         shutil.copyfile(HERE/name,source/name)
+     if (ROOT/'docs'/'windows-installer.md').exists():shutil.copyfile(ROOT/'docs'/'windows-installer.md',output/'windows-installer.md')
+     print('Windows distribution ready: '+str(output))
+diff --git a/deploy/windows/setup.nsi b/deploy/windows/setup.nsi
+index 73badf0..68d28df 100644
+--- a/deploy/windows/setup.nsi
++++ b/deploy/windows/setup.nsi
+@@ -14,6 +14,6 @@ Section
+   InitPluginsDir
+   SetOutPath "$PLUGINSDIR\NetorySetup"
+   File /r "${BUNDLE_DIR}/*"
+-  ExecWait '"$WINDIR\Sysnative\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -ExecutionPolicy Bypass -File "$PLUGINSDIR\NetorySetup\Setup.ps1"' $0
++  ExecWait '"$WINDIR\Sysnative\WindowsPowerShell\v1.0\powershell.exe" -STA -NoProfile -ExecutionPolicy Bypass -File "$PLUGINSDIR\NetorySetup\Setup.ps1"' $0
+   SetErrorLevel $0
+ SectionEnd
+diff --git a/docs/windows-installer.md b/docs/windows-installer.md
+index 6b21b48..01d4a8a 100644
+--- a/docs/windows-installer.md
++++ b/docs/windows-installer.md
+@@ -17,13 +17,19 @@ Targets: Windows 10/11 x64 and Windows Server 2019/2022/2025 x64 with desktop ex
+ 
+ ## Installed layout and behavior
+ 
+-Program files are under `%ProgramFiles%\Netory`. Persistent configuration, encryption keys, logs, SQLite data and pre-update backups are under `%ProgramData%\Netory`; the database is `db\netory.db`. The application runs as an automatic service called `Netory` under `NT AUTHORITY\LocalService`, with restricted program read/execute access and database/log write access. Administrators and SYSTEM retain full control; the service can read encryption keys but ordinary users cannot.
++Setup lets users choose separate application and database/data folders on fixed local drives. Defaults are `%ProgramFiles%\Netory` and `%ProgramData%\Netory`. The selected data folder contains the SQLite database at `db\netory.db`; database engines other than SQLite are not added by this feature. Paths are remembered in `HKLM\Software\Netory` and preserved during updates/configuration, including after uninstall. Existing storage is not migrated by Configure. Persistent configuration, encryption keys, logs, SQLite data and pre-update backups are under `%ProgramData%\Netory`; the database is `db\netory.db`. The application runs as an automatic service called `Netory` under `NT AUTHORITY\LocalService`, with restricted program read/execute access and database/log write access. Administrators and SYSTEM retain full control; the service can read encryption keys but ordinary users cannot.
++
++Setup uses a DPI-aware, two-column settings form with separate label/input cells, keyboard tab navigation and explicit STA launchers. Fresh installations allow editing all administrator fields. On update/configuration those account fields are intentionally read-only; the form explains that existing accounts are preserved and credentials are changed inside Netory. The port and private-network setting remain editable.
+ 
+ Setup uses a GUI for the port (1–65535), first administrator name and matching passwords of at least 14 characters. Passwords travel to provisioning over redirected stdin as escaped JSON, never command-line arguments, setup files or logs; only an Argon2 hash is stored. Existing admin accounts/passwords and encryption keys are preserved on update. The database is initialized and upgraded automatically using Alembic.
+ 
+-By default Netory binds `127.0.0.1`. The optional private-LAN checkbox binds `0.0.0.0` and creates a TCP firewall rule limited to Windows Private profiles and local-subnet clients. It does not open Public profiles or provision public DNS/HTTPS. Configure an HTTPS reverse proxy separately before Internet deployment or supplying real AI provider credentials. `COOKIE_SECURE=false` supports the initial local HTTP setup; adjust it when deploying HTTPS.
++By default Netory binds `127.0.0.1`. The private-LAN checkbox binds `0.0.0.0` and creates a firewall rule limited to Windows Private profiles and local-subnet clients. HTTPS can be enabled during installation or using Configure Netory. Select a PFX/P12 containing the private key and server certificate chain, enter its password, and supply the matching DNS name or IPv4 address. Setup validates validity dates, SAN identity and key matching before saving the certificate. Certificates are imported using [cryptography PKCS12](https://cryptography.io/en/stable/hazmat/primitives/asymmetric/serialization/#pkcs12) and served using [Uvicorn TLS settings](https://uvicorn.dev/settings/#https).
++
++The PFX password travels only through stdin and is not retained. Exported PEM certificates and the service key live under the protected data `tls` directory. Administrators/SYSTEM have full control; LocalService has read access. Configure can replace the certificate, or retain the current one by leaving the PFX field blank. Failed configuration restores the previous certificate, service XML, database and environment. TLS sets `COOKIE_SECURE=true`; HTTP sets it to false. Clearing browser cookies may be necessary when reverting to HTTP.
+ 
+-Start menu shortcuts open the application, reconfigure the port/network setting, or uninstall. The application is also registered in Windows installed apps. Reconfiguration restarts the service. Updates stop the service, back up the database/configuration, replace program files, apply migrations and restart; failures attempt rollback of program/data/configuration. Pre-update backups remain administrator-only. Uninstall removes the service, program files, shortcuts and firewall rule while preserving data/configuration/backups.
++The installer does not provision DNS, issue public certificates, or alter system/client trust stores. Use a CA-issued certificate trusted by clients; private CA roots must be deployed by the administrator to clients. A chain bundled in a PFX does not itself establish browser trust. The local readiness probe trusts the installed certificate only for that probe and validates its identity; remote browser trust must be checked separately. Public DNS names must resolve to the installation host. IPv6 certificate addresses are not supported in this setup UI.
++
++Start menu shortcuts open the application, reconfigure network/HTTPS settings or replace the certificate, or uninstall. The application is also registered in Windows installed apps. Reconfiguration restarts the service. Updates stop the service, back up the database/configuration, replace program files, apply migrations and restart; failures attempt rollback of program/data/configuration. Pre-update backups remain administrator-only. Uninstall removes the service, program files, shortcuts and firewall rule while preserving data/configuration/backups.
+ 
+ ## Building
+ 
+@@ -44,6 +50,8 @@ The copied `/var/www/Netory_DIST/build.py` can also be invoked with `--source /p
+ 
+ Linux-side checks cover fresh SQLite migrations, administrator creation/password hashing, rerun preservation of accounts/encryption keys, backup readability, short-password rejection, PowerShell parsing, generated service XML/port binding, Unicode credential transport, Windows binary dependency selection, payload hashes and compiled Windows EXE/ZIP integrity. These checks do not establish that installation, UAC, WinSW registration, firewall rules or rollback work on Windows.
+ 
+-Before production distribution, test the EXE on a clean Windows VM. Run `installer-source/Test-Installation.ps1` elevated after installation, sign in and create data, change the port, restart Windows, update using the package and confirm data preservation, simulate an occupied port, and uninstall/reinstall while checking preserved data/keys. This host has no Windows execution environment, so those lifecycle checks remain unverified.
++The form layout repair removes the overlapping full-width labels from the original installer. Linux-side parsing/build tests do not verify mouse/keyboard interaction on Windows.
++
++Before production distribution, test the EXE on a clean Windows VM. First run `powershell.exe -STA -NoProfile -ExecutionPolicy Bypass -File installer-source/Test-SetupForm.ps1` on an interactive desktop. This checks field input and mouse hit targets at 100%, 150% and 200% scaling, password masking, tab order and Configure-mode permissions without installing anything. Run `installer-source/Test-Installation.ps1` elevated after installation, sign in and create data, change the port, restart Windows, update using the package and confirm data preservation, simulate an occupied port, and uninstall/reinstall while checking preserved data/keys. This host has no Windows execution environment, so those lifecycle checks remain unverified.
+ 
+ References: [Python Windows embedding](https://docs.python.org/3.13/using/windows.html), [WinSW v2 configuration](https://github.com/winsw/winsw/blob/v2.12.0/doc/xmlConfigFile.md), [Microsoft Visual C++ runtime](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist).
+diff --git a/tests/test_windows_installer.py b/tests/test_windows_installer.py
+index a350608..1c88c55 100644
+--- a/tests/test_windows_installer.py
++++ b/tests/test_windows_installer.py
+@@ -6,6 +6,7 @@ import sqlite3
+ import subprocess
+ import sys
+ from argon2 import PasswordHasher
++from alembic.script import ScriptDirectory
+ 
+ ROOT=Path(__file__).resolve().parents[1]
+ SCRIPT=ROOT/'deploy/windows/bootstrap.py'
+@@ -23,7 +24,7 @@ def test_installer_creates_database_admin_and_preserves_keys_and_backups(tmp_pat
+         username,hashed,is_admin=db.execute('SELECT username,password_hash,is_admin FROM users').fetchone()
+         assert username=='installadmin' and is_admin==1
+         assert PasswordHasher().verify(hashed,'installer-test-password-123')
+-        assert db.execute('SELECT version_num FROM alembic_version').fetchone()[0]=='0040_map_settings'
++        assert db.execute('SELECT version_num FROM alembic_version').fetchone()[0]==ScriptDirectory(str(ROOT/'backend/migrations')).get_current_head()
+     original=(data/'.env').read_text()
+     assert 'WLAN_ENCRYPTION_KEY' in original and 'AI_ENCRYPTION_KEY' in original
+     assert 'installer-test-password-123' not in original
+@@ -55,3 +56,104 @@ def test_installer_refuses_to_replace_missing_encryption_configuration(tmp_path)
+     else:raise AssertionError('Lost encryption keys were silently replaced')
+     assert not (data/'.env').exists()
+     assert (data/'db/netory.db').read_bytes()==original
++
++
++def make_pfx(tmp_path, name='netory.test', expired=False):
++    from datetime import datetime, timedelta, timezone
++    from cryptography import x509
++    from cryptography.x509.oid import NameOID
++    from cryptography.hazmat.primitives import hashes, serialization
++    from cryptography.hazmat.primitives.asymmetric import rsa
++    from cryptography.hazmat.primitives.serialization import pkcs12
++    key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
++    subject = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, name)])
++    now = datetime.now(timezone.utc)
++    cert = (x509.CertificateBuilder().subject_name(subject).issuer_name(subject)
++            .public_key(key.public_key()).serial_number(x509.random_serial_number())
++            .not_valid_before(now-timedelta(days=2))
++            .not_valid_after(now+timedelta(days=-1 if expired else 30))
++            .add_extension(x509.SubjectAlternativeName([x509.DNSName(name)]), critical=False)
++            .sign(key, hashes.SHA256()))
++    path = tmp_path / 'server.pfx'
++    path.write_bytes(pkcs12.serialize_key_and_certificates(b'Netory', key, cert, None,
++                    serialization.BestAvailableEncryption(b'pfx-secret-123')))
++    return path
++
++
++def certificate_command(data, **parameters):
++    return subprocess.run([sys.executable, str(SCRIPT), 'certificate', '--app', str(ROOT), '--data', str(data)],
++                          input=json.dumps(parameters), text=True, capture_output=True)
++
++
++def test_pfx_import_validates_identity_and_preserves_certificate_on_failure(tmp_path):
++    import ssl
++    data = tmp_path / 'custom database'; data.mkdir()
++    source = make_pfx(tmp_path)
++    result = certificate_command(data, hostname='netory.test', certificate=str(source), certificate_password='pfx-secret-123')
++    assert result.returncode == 0, result.stderr
++    assert 'pfx-secret-123' not in result.stdout + result.stderr
++    installed = (data / 'tls/server.pem').read_bytes()
++    key = (data / 'tls/server.key').read_bytes()
++    context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
++    context.load_cert_chain(data / 'tls/server.pem', data / 'tls/server.key')
++    result = certificate_command(data, hostname='wrong.test', certificate=str(source), certificate_password='pfx-secret-123')
++    assert result.returncode != 0
++    assert (data / 'tls/server.pem').read_bytes() == installed
++    assert (data / 'tls/server.key').read_bytes() == key
++    result = certificate_command(data, hostname='netory.test')
++    assert result.returncode == 0, result.stderr
++    result = certificate_command(data, hostname='netory.test', certificate=str(source), certificate_password='wrong')
++    assert result.returncode != 0 and 'Check its password' in result.stderr
++    assert (data / 'tls/server.pem').read_bytes() == installed
++
++
++def test_pfx_import_rejects_expired_certificate(tmp_path):
++    source = make_pfx(tmp_path, expired=True)
++    result = certificate_command(tmp_path, hostname='netory.test', certificate=str(source), certificate_password='pfx-secret-123')
++    assert result.returncode != 0 and 'expired' in result.stderr
++    assert not (tmp_path / 'tls/server.key').exists()
++
++
++def test_https_setup_changes_cookie_security_without_replacing_encryption_keys(tmp_path):
++    from dotenv import dotenv_values
++    data = tmp_path / 'custom data folder'; run_setup(data)
++    before = dotenv_values(data / '.env')
++    result = subprocess.run([sys.executable, str(SCRIPT), 'setup', '--app', str(ROOT), '--data', str(data)],
++                            input=json.dumps({'https': True}), text=True, capture_output=True,
++                            cwd=tmp_path, env={**os.environ, 'PYTHONPATH': str(ROOT)})
++    assert result.returncode == 0, result.stderr
++    after = dotenv_values(data / '.env')
++    assert after['COOKIE_SECURE'] == 'true'
++    assert after['WLAN_ENCRYPTION_KEY'] == before['WLAN_ENCRYPTION_KEY']
++    assert after['AI_ENCRYPTION_KEY'] == before['AI_ENCRYPTION_KEY']
++
++
++def test_https_readiness_uses_installed_identity_without_system_trust_changes(tmp_path):
++    import http.server
++    import ssl
++    import threading
++    data = tmp_path / 'state'; data.mkdir()
++    source = make_pfx(tmp_path)
++    result = certificate_command(data, hostname='netory.test', certificate=str(source), certificate_password='pfx-secret-123')
++    assert result.returncode == 0, result.stderr
++    class Handler(http.server.BaseHTTPRequestHandler):
++        protocol_version = 'HTTP/1.1'
++        def do_GET(self):
++            content = b'<html><div id="auth-root"></div></html>'
++            self.send_response(200); self.send_header('Content-Length', str(len(content))); self.end_headers()
++            self.wfile.write(content)
++        def log_message(self, *args):
++            pass
++    server = http.server.HTTPServer(('127.0.0.1', 0), Handler)
++    context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
++    context.load_cert_chain(data / 'tls/server.pem', data / 'tls/server.key')
++    server.socket = context.wrap_socket(server.socket, server_side=True)
++    worker = threading.Thread(target=server.serve_forever, daemon=True); worker.start()
++    try:
++        for hostname, expected in [('netory.test', 0), ('wrong.test', 1)]:
++            result = subprocess.run([sys.executable, str(SCRIPT), 'health', '--app', str(ROOT), '--data', str(data)],
++                                    input=json.dumps({'port': server.server_port, 'https': True, 'hostname': hostname}),
++                                    text=True, capture_output=True, timeout=10)
++            assert (result.returncode != 0) == bool(expected), result.stderr
++    finally:
++        server.shutdown(); server.server_close(); worker.join(timeout=5)

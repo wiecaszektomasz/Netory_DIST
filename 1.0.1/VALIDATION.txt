@@ -1,0 +1,9 @@
+PASS: 7 installer provisioning tests.
+PASS: Fresh packaged 1.0.1 setup.
+PASS: Actual archived 1.0 -> packaged 1.0.1 upgrade and repeat setup.
+PASS: Accounts/passwords, encryption configuration, inventory, encrypted WLAN, notes and licensing identity preserved.
+PASS: Database backup at 0043 and migration to 0046; SQLite integrity checks.
+PASS: PowerShell syntax.
+PASS: 2101 payload hashes, ZIP CRC and payload matching, EXE PE/version resource 1.0.1.0, SHA-256 checksums, no private-file payloads.
+PASS: Original 1.0 archive unchanged (2087 hashes).
+NOT EXECUTED: End-to-end Windows GUI/UAC/service/firewall/rollback/uninstall lifecycle.

@@ -1,0 +1,2 @@
+5ea63255caaf4e338099744dde53334c3f48b6e7ad413c6fc9c0ffdcedaa3a23  Netory-Windows-x64.zip
+b6408bd1ccaf5e3f7fe50cbad385c8b9995e07a47600b6f833270c3a100a691d  Netory-Setup.exe

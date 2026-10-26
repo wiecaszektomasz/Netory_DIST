@@ -1,0 +1,10 @@
+# Build caches and superseded repair snapshots are local only.
+/build-support/
+/previous-*/
+# Release ZIPs contain the extracted application/runtime files.
+/*/Netory-Windows-x64/*
+!/*/Netory-Windows-x64/manifest.json
+!/*/Netory-Windows-x64/DEPENDENCIES.txt
+!/*/Netory-Windows-x64/version.json
+__pycache__/
+*.pyc

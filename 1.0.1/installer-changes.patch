@@ -1,0 +1,237 @@
+diff --git a/deploy/windows/README.txt b/deploy/windows/README.txt
+index e384c67..9ea577c 100644
+--- a/deploy/windows/README.txt
++++ b/deploy/windows/README.txt
+@@ -1,3 +1,5 @@
++NETORY 1.0.1 WINDOWS X64
++
+ NETORY FOR WINDOWS (64-bit)
+ 
+ QUICK START
+@@ -99,3 +101,10 @@ Install the signed license file using a superadmin account. Netory must reach
+ https://lic.netory.app over HTTPS for write access; there is no offline grace.
+ One license is assigned to one instance. Preserve the licensing folder on upgrade
+ and backup. Local clock monitoring and clock-recovery files are no longer used.
++
++UPDATING FROM 1.0 TO 1.0.1
++Run the new Netory-Setup.exe as administrator on the existing computer. Setup detects the registered application and data folders and shows Update Netory. Keep the existing folders. Administrator fields remain locked; accounts and passwords are preserved. Existing port, private-LAN and HTTPS settings are loaded. Click Update Netory.
++
++Setup stops the service, backs up the SQLite database, environment/encryption configuration and licensing identity, replaces program files, applies migrations 0044 through 0046 and restarts the service. Backups remain in your selected data folder under backups. Do not uninstall 1.0 first or delete the data folder. Keep an independent backup before updating a production installation.
++
++Windows installed apps and the installation version.json identify the new version as 1.0.1. The new application includes instance licensing; existing licensing identities are preserved, and installations without an identity are provisioned once. A valid application license may need activation after upgrading the older 1.0 application. Contact your Netory license administrator if the application opens read-only.
+diff --git a/deploy/windows/Setup.ps1 b/deploy/windows/Setup.ps1
+index 5592ab8..99d457f 100644
+--- a/deploy/windows/Setup.ps1
++++ b/deploy/windows/Setup.ps1
+@@ -22,6 +22,7 @@ $ServiceExe=Join-Path $InstallRoot 'service\Netory.exe'
+ $SettingsPath=Join-Path $DataRoot 'settings.json'
+ $FirewallName='Netory-Private-LAN'
+ $Utf8=New-Object Text.UTF8Encoding($false)
++$PackageVersion=[string]((Get-Content (Join-Path $PSScriptRoot 'version.json') -Raw | ConvertFrom-Json).version)
+ function Run-Checked([string]$File,[string[]]$Arguments) {
+     & $File @Arguments | Out-Null
+     if ($LASTEXITCODE -ne 0) { throw "Operation failed: $(Split-Path $File -Leaf) (exit $LASTEXITCODE). Check the installation log." }
+@@ -116,9 +117,11 @@ function Create-Shortcuts([int]$Port) {
+     New-Item 'HKLM:\Software\Netory' -Force | Out-Null
+     New-ItemProperty 'HKLM:\Software\Netory' -Name InstallRoot -Value $InstallRoot -PropertyType String -Force | Out-Null
+     New-ItemProperty 'HKLM:\Software\Netory' -Name DataRoot -Value $DataRoot -PropertyType String -Force | Out-Null
++    New-ItemProperty 'HKLM:\Software\Netory' -Name Version -Value $PackageVersion -PropertyType String -Force | Out-Null
+     $registry='HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\Netory'
+     New-Item $registry -Force | Out-Null
+     New-ItemProperty $registry -Name DisplayName -Value 'Netory' -PropertyType String -Force | Out-Null
++    New-ItemProperty $registry -Name DisplayVersion -Value $PackageVersion -PropertyType String -Force | Out-Null
+     New-ItemProperty $registry -Name Publisher -Value 'Netory' -PropertyType String -Force | Out-Null
+     New-ItemProperty $registry -Name InstallLocation -Value $InstallRoot -PropertyType String -Force | Out-Null
+     New-ItemProperty $registry -Name UninstallString -Value ('"'+$PSHOME+'\powershell.exe" -STA -NoProfile -ExecutionPolicy Bypass -File "'+(Join-Path $InstallRoot 'Setup.ps1')+'" -Mode Uninstall') -PropertyType String -Force | Out-Null
+@@ -144,6 +147,7 @@ function Install-Netory([int]$Port,[bool]$Lan,[string]$Username,[string]$Passwor
+             }
+             New-Item -ItemType Directory -Path $stage | Out-Null
+             Copy-Item (Join-Path $PSScriptRoot 'payload\*') $stage -Recurse -Force
++            Copy-Item (Join-Path $PSScriptRoot 'version.json') (Join-Path $stage 'version.json')
+             Copy-Item $PSCommandPath (Join-Path $stage 'Setup.ps1')
+             Copy-Item (Join-Path $PSScriptRoot 'SetupForm.ps1') (Join-Path $stage 'SetupForm.ps1')
+             $vc=Join-Path $stage 'prerequisites\vc_redist.x64.exe'
+@@ -156,11 +160,11 @@ function Install-Netory([int]$Port,[bool]$Lan,[string]$Username,[string]$Passwor
+         }
+         Stop-Netory
+         if(@(Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue).Count){throw "Port $Port is already in use by another process."}
+-        if(Test-Path (Join-Path $InstallRoot 'runtime\python.exe')) {
+-            Run-Python (Join-Path $InstallRoot 'runtime\python.exe') ('"'+(Join-Path $InstallRoot 'tools\bootstrap.py')+'" backup --app "'+(Join-Path $InstallRoot 'app')+'" --data "'+$DataRoot+'" --destination "'+$backupPath+'"')
+-        }
+-        elseif($Mode -eq 'Install' -and (Test-Path (Join-Path $DataRoot 'db\netory.db'))) {
+-            Run-Python (Join-Path $stage 'runtime\python.exe') ('"'+(Join-Path $stage 'tools\bootstrap.py')+'" backup --app "'+(Join-Path $stage 'app')+'" --data "'+$DataRoot+'" --destination "'+$backupPath+'"')
++        # Use the NEW backup helper when upgrading 1.0; the old helper did not
++        # include the licensing identity. Back up before moving any program files.
++        $backupRoot=if($Mode -eq 'Install'){$stage}else{$InstallRoot}
++        if(Test-Path (Join-Path $DataRoot 'db\netory.db')) {
++            Run-Python (Join-Path $backupRoot 'runtime\python.exe') ('"'+(Join-Path $backupRoot 'tools\bootstrap.py')+'" backup --app "'+(Join-Path $backupRoot 'app')+'" --data "'+$DataRoot+'" --destination "'+$backupPath+'"')
+         }
+         if($Mode -eq 'Install') {
+             if(Test-Path $InstallRoot){Move-Item $InstallRoot $previous; $moved=$true}
+@@ -182,7 +186,7 @@ function Install-Netory([int]$Port,[bool]$Lan,[string]$Username,[string]$Passwor
+         Start-Service Netory
+         Wait-Netory $Port
+         Update-Firewall $Port $Lan
+-        [IO.File]::WriteAllText($SettingsPath,(@{port=$Port;lan=$Lan;https=$Https;hostname=$Hostname;installRoot=$InstallRoot;dataRoot=$DataRoot}|ConvertTo-Json),$Utf8)
++        [IO.File]::WriteAllText($SettingsPath,(@{version=$PackageVersion;port=$Port;lan=$Lan;https=$Https;hostname=$Hostname;installRoot=$InstallRoot;dataRoot=$DataRoot}|ConvertTo-Json),$Utf8)
+         Create-Shortcuts $Port
+         $started=$true
+         if($moved){Remove-Item $previous -Recurse -Force}
+@@ -197,6 +201,9 @@ function Install-Netory([int]$Port,[bool]$Lan,[string]$Username,[string]$Passwor
+                 foreach($suffix in @('-wal','-shm')){Remove-Item ((Join-Path $DataRoot 'db\netory.db')+$suffix) -ErrorAction SilentlyContinue}
+                 Copy-Item (Join-Path $backupPath 'netory.db') (Join-Path $DataRoot 'db\netory.db') -Force
+             }
++            if(Test-Path (Join-Path $backupPath 'licensing')) {
++                Copy-Item (Join-Path $backupPath 'licensing\*') (Join-Path $DataRoot 'licensing') -Recurse -Force
++            }
+             foreach($tlsFile in @('server.pem','server.key')){
+                 if(Test-Path (Join-Path $backupPath $tlsFile)){Copy-Item (Join-Path $backupPath $tlsFile) (Join-Path $DataRoot ('tls\'+$tlsFile)) -Force}
+             }
+@@ -223,7 +230,7 @@ if($Mode -eq 'Uninstall') {
+ $saved=$null
+ if(Test-Path $SettingsPath){$saved=Get-Content $SettingsPath -Raw|ConvertFrom-Json}
+ $window=New-NetorySetupForm -SavedSettings $saved -Mode $Mode -InstallRoot $InstallRoot -DataRoot $DataRoot
+-$form=$window.Form;$fieldsPanel=$window.FieldsPanel
++$form=$window.Form;$form.Text="Netory $PackageVersion Setup";$fieldsPanel=$window.FieldsPanel
+ $portBox=$window.Port;$lanBox=$window.Lan;$nameBox=$window.Username
+ $passwordBox=$window.Password;$confirmBox=$window.Confirm
+ $installButton=$window.Install;$cancelButton=$window.Cancel
+@@ -256,13 +263,13 @@ $installButton.Add_Click({
+         if($Https -and (-not $Hostname -or $Hostname -match '[^a-zA-Z0-9.\-]')){throw 'Enter the certificate DNS name or IPv4 address without a scheme, port or path.'}
+         if($Https -and -not $Certificate -and -not (Test-Path (Join-Path $DataRoot 'tls\server.pem'))){throw 'Choose a PFX certificate with its private key to enable HTTPS.'}
+         if($Https -and $Certificate -and -not (Test-Path -LiteralPath $Certificate -PathType Leaf)){throw 'The selected certificate file does not exist.'}
+-        $installButton.Enabled=$false;$cancelButton.Enabled=$false;$fieldsPanel.Enabled=$false;$form.UseWaitCursor=$true;$form.Text='Netory Setup - working...';$form.Refresh()
++        $installButton.Enabled=$false;$cancelButton.Enabled=$false;$fieldsPanel.Enabled=$false;$form.UseWaitCursor=$true;$form.Text="Netory $PackageVersion Setup - working...";$form.Refresh()
+         Install-Netory $port $lanBox.Checked $nameBox.Text $passwordBox.Text
+         $passwordBox.Clear();$confirmBox.Clear();$window.CertificatePassword.Clear();$script:CertificatePassword=''
+         [Windows.Forms.MessageBox]::Show("Netory is running at $(Get-NetoryUrl $port)`nUse the Start menu shortcuts to open or configure it.",'Netory installed')|Out-Null
+         $form.UseWaitCursor=$false;$form.Close();Start-Process (Get-NetoryUrl $port)
+     } catch { [Windows.Forms.MessageBox]::Show($_.Exception.Message,'Netory Setup','OK','Error')|Out-Null }
+-    finally {$form.UseWaitCursor=$false;$fieldsPanel.Enabled=$true;$cancelButton.Enabled=$true;$installButton.Enabled=$true;$form.Text='Netory Setup'}
++    finally {$form.UseWaitCursor=$false;$fieldsPanel.Enabled=$true;$cancelButton.Enabled=$true;$installButton.Enabled=$true;$form.Text="Netory $PackageVersion Setup"}
+ })
+ $form.Add_FormClosing({param($sender,$eventArgs) if($form.UseWaitCursor){$eventArgs.Cancel=$true}})
+ [void]$form.ShowDialog()
+diff --git a/deploy/windows/Test-Installation.ps1 b/deploy/windows/Test-Installation.ps1
+index 3f32f25..9419848 100644
+--- a/deploy/windows/Test-Installation.ps1
++++ b/deploy/windows/Test-Installation.ps1
+@@ -1,9 +1,14 @@
+ # Run in an elevated Windows PowerShell after completing installation.
++param([string]$ExpectedVersion='1.0.1')
+ $ErrorActionPreference='Stop'
+ $installRoot=Join-Path $env:ProgramFiles 'Netory'
+ $dataRoot=Join-Path $env:ProgramData 'Netory'
+ $location=Get-ItemProperty 'HKLM:\Software\Netory' -ErrorAction SilentlyContinue
+ if($location){$installRoot=$location.InstallRoot;$dataRoot=$location.DataRoot}
++$version=Get-Content (Join-Path $installRoot 'version.json') -Raw|ConvertFrom-Json
++if($version.version -ne $ExpectedVersion){throw "Installed version is not $ExpectedVersion."}
++$uninstall=Get-ItemProperty 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\Netory'
++if($uninstall.DisplayVersion -ne $ExpectedVersion){throw 'Windows installed-app version does not match.'}
+ $settings=Get-Content (Join-Path $dataRoot 'settings.json') -Raw|ConvertFrom-Json
+ $service=Get-CimInstance Win32_Service -Filter "Name='Netory'"
+ if(-not $service -or $service.State -ne 'Running'){throw 'Netory service is not running.'}
+diff --git a/deploy/windows/build.py b/deploy/windows/build.py
+index 8f2bbe0..214be98 100644
+--- a/deploy/windows/build.py
++++ b/deploy/windows/build.py
+@@ -35,7 +35,9 @@ def download(url, path):
+     return path
+ 
+ 
+-def build(output, cache, makensis=None, nsisdir=None):
++def build(output, cache, makensis=None, nsisdir=None, version='1.0.1'):
++    if not re.fullmatch(r'\d{1,4}\.\d{1,4}\.\d{1,4}', version) or any(int(part)>65535 for part in version.split('.')):
++        raise ValueError('Use a three-part release version, for example 1.0.1')
+     if not (ROOT/'backend'/'trust'/'license-authority.pem').is_file():
+         raise ValueError('Install the license authority public certificate before building a customer installer')
+     output=output.resolve();cache=cache.resolve()
+@@ -49,6 +51,7 @@ def build(output, cache, makensis=None, nsisdir=None):
+     archive=download(PYTHON_URL,cache/f'python-{PYTHON_VERSION}-embed-amd64.zip')
+     with zipfile.ZipFile(archive) as package:package.extractall(runtime)
+     (runtime/'python313._pth').write_text('python313.zip\n.\nLib/site-packages\n../app\nimport site\n')
++    (bundle/'version.json').write_text(json.dumps({'version':version})+'\n')
+     requirements=(ROOT/'requirements.txt').read_text().replace('uvicorn[standard]', 'uvicorn')+'\ncolorama>=0.4,<1\ntzdata\n'
+     req=cache/'requirements-windows.txt';req.write_text(requirements)
+     wheels=cache/'wheels';wheels.mkdir(exist_ok=True)
+@@ -82,12 +85,12 @@ def build(output, cache, makensis=None, nsisdir=None):
+     installed=runtime/'Lib'/'site-packages'
+     distributions=[]
+     for path in sorted(installed.glob('*.dist-info/METADATA')):
+-        text=path.read_text();name=re.search(r'^Name: (.+)$',text,re.M).group(1);version=re.search(r'^Version: (.+)$',text,re.M).group(1);distributions.append(f'{name}=={version}')
++        text=path.read_text();name=re.search(r'^Name: (.+)$',text,re.M).group(1);package_version=re.search(r'^Version: (.+)$',text,re.M).group(1);distributions.append(f'{name}=={package_version}')
+     (bundle/'DEPENDENCIES.txt').write_text('\n'.join(sorted(distributions,key=str.lower))+'\n')
+     for file in bundle.rglob('*'):
+-        if file.is_file() and (file.name=='.env' or file.suffix in {'.db','.sqlite','.sqlite3','.key'} or (file.suffix=='.pem' and file != installed/'certifi'/'cacert.pem')):raise ValueError(f'Forbidden private file: {file}')
++        if file.is_file() and (file.name=='.env' or file.suffix in {'.db','.sqlite','.sqlite3','.key'} or (file.suffix=='.pem' and file not in {installed/'certifi'/'cacert.pem', app/'backend'/'trust'/'license-authority.pem'})):raise ValueError(f'Forbidden private file: {file}')
+     files={p.relative_to(bundle).as_posix():digest(p) for p in sorted(bundle.rglob('*')) if p.is_file()}
+-    manifest={'python':PYTHON_VERSION,'winsw':'2.12.0','architecture':'win_amd64','database':'SQLite (bundled with Python)','source_revision':subprocess.check_output(['git','-C',str(ROOT),'rev-parse','HEAD'],text=True).strip(),'source_has_uncommitted_changes':bool(subprocess.check_output(['git','-C',str(ROOT),'status','--porcelain'],text=True).strip()),'downloads':{PYTHON_URL:digest(archive),WINSW_URL:digest(winsw),VC_URL:digest(vcredist)},'files':files}
++    manifest={'version':version,'python':PYTHON_VERSION,'winsw':'2.12.0','architecture':'win_amd64','database':'SQLite (bundled with Python)','source_revision':subprocess.check_output(['git','-C',str(ROOT),'rev-parse','HEAD'],text=True).strip(),'source_has_uncommitted_changes':bool(subprocess.check_output(['git','-C',str(ROOT),'status','--porcelain'],text=True).strip()),'downloads':{PYTHON_URL:digest(archive),WINSW_URL:digest(winsw),VC_URL:digest(vcredist)},'files':files}
+     (bundle/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
+     zip_path=output/'Netory-Windows-x64.zip'
+     with zipfile.ZipFile(zip_path,'w',zipfile.ZIP_DEFLATED,compresslevel=6) as package:
+@@ -98,7 +101,7 @@ def build(output, cache, makensis=None, nsisdir=None):
+         executable=output/'Netory-Setup.exe'
+         environment=os.environ.copy()
+         if nsisdir:environment['NSISDIR']=str(nsisdir)
+-        subprocess.run([str(makensis),'-V2',f'-DBUNDLE_DIR={bundle}',f'-DOUTPUT_EXE={executable}',str(HERE/'setup.nsi')],check=True,env=environment)
++        subprocess.run([str(makensis),'-V2',f'-DBUNDLE_DIR={bundle}',f'-DOUTPUT_EXE={executable}',f'-DAPP_VERSION={version}',str(HERE/'setup.nsi')],check=True,env=environment)
+         artifacts.append(executable)
+     (output/'SHA256SUMS.txt').write_text(''.join(f'{digest(path)}  {path.name}\n' for path in artifacts))
+     shutil.copyfile(HERE/'README.txt',output/'README.txt')
+@@ -113,6 +116,7 @@ def build(output, cache, makensis=None, nsisdir=None):
+ 
+ if __name__=='__main__':
+     parser=argparse.ArgumentParser(description=__doc__)
++    parser.add_argument('--version',default='1.0.1',help='Three-part application release version')
+     parser.add_argument('--source',type=Path,help='Netory source checkout; required when running the copied builder outside the source repository')
+     parser.add_argument('--output',type=Path,default=Path('/var/www/Netory_DIST'))
+     parser.add_argument('--cache',type=Path,default=Path('/tmp/netory-windows-downloads'))
+@@ -121,4 +125,4 @@ if __name__=='__main__':
+     args=parser.parse_args()
+     if args.source:ROOT=args.source.resolve()
+     if not (ROOT/'backend'/'main.py').is_file():parser.error('Specify the Netory source checkout with --source')
+-    build(args.output,args.cache,args.makensis,args.nsisdir)
++    build(args.output,args.cache,args.makensis,args.nsisdir,args.version)
+diff --git a/deploy/windows/setup.nsi b/deploy/windows/setup.nsi
+index 68d28df..61a35ff 100644
+--- a/deploy/windows/setup.nsi
++++ b/deploy/windows/setup.nsi
+@@ -1,5 +1,14 @@
+ Unicode true
+-Name "Netory Setup"
++!ifndef APP_VERSION
++!define APP_VERSION "1.0.1"
++!endif
++Name "Netory ${APP_VERSION} Setup"
++VIProductVersion "${APP_VERSION}.0"
++VIAddVersionKey "ProductName" "Netory"
++VIAddVersionKey "ProductVersion" "${APP_VERSION}"
++VIAddVersionKey "FileVersion" "${APP_VERSION}.0"
++VIAddVersionKey "FileDescription" "Netory Windows installer"
++VIAddVersionKey "LegalCopyright" "Netory"
+ OutFile "${OUTPUT_EXE}"
+ RequestExecutionLevel admin
+ SilentInstall silent
+diff --git a/docs/windows-installer.md b/docs/windows-installer.md
+index a78fafb..5167023 100644
+--- a/docs/windows-installer.md
++++ b/docs/windows-installer.md
+@@ -1,6 +1,6 @@
+ # Windows installer
+ 
+-The working installer is archived as version **1.0** in `/var/www/Netory_DIST/1.0`. See its `BUILD-INFO.md` for the exact build recipe, source provenance and validation record. Persistent prerequisites and NSIS tools are preserved under `/var/www/Netory_DIST/build-support`. Build future releases into a separate folder; do not overwrite the 1.0 archive.
++The previous working installer is archived as version **1.0** in `/var/www/Netory_DIST/1.0`. See its `BUILD-INFO.md` for the exact build recipe, source provenance and validation record. Persistent prerequisites and NSIS tools are preserved under `/var/www/Netory_DIST/build-support`. Build future releases into a separate folder; do not overwrite the 1.0 archive.
+ 
+ Each distribution contains:
+ 
+@@ -57,3 +57,9 @@ The form layout repair removes the overlapping full-width labels from the origin
+ Before production distribution, test the EXE on a clean Windows VM. First run `powershell.exe -STA -NoProfile -ExecutionPolicy Bypass -File installer-source/Test-SetupForm.ps1` on an interactive desktop. This checks field input and mouse hit targets at 100%, 150% and 200% scaling, password masking, tab order and Configure-mode permissions without installing anything. Run `installer-source/Test-Installation.ps1` elevated after installation, sign in and create data, change the port, restart Windows, update using the package and confirm data preservation, simulate an occupied port, and uninstall/reinstall while checking preserved data/keys. This host has no Windows execution environment, so those lifecycle checks remain unverified.
+ 
+ References: [Python Windows embedding](https://docs.python.org/3.13/using/windows.html), [WinSW v2 configuration](https://github.com/winsw/winsw/blob/v2.12.0/doc/xmlConfigFile.md), [Microsoft Visual C++ runtime](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist).
++
++## Release 1.0.1
++
++Version 1.0.1 is built in `/var/www/Netory_DIST/1.0.1` from the current main application. Run its `Netory-Setup.exe` directly on a 1.0 machine and choose **Update Netory**; uninstalling first is unnecessary. Setup discovers the existing paths from `HKLM\Software\Netory`, preserves accounts/passwords, encryption configuration, network/HTTPS settings and licensing identity, and migrates the original `0043_notes_board` database through `0046_report_configurations`. The package version is recorded in `version.json`, manifest metadata and Windows installed apps.
++
++Build with `--version 1.0.1` and use the separate cache `/var/www/Netory_DIST/build-support/downloads-1.0.1`. The public license-authority certificate is included; private license keys and live data are excluded. An older installation without an application license may require activation after upgrading. Data migration and actual archived-1.0 bootstrap preservation are exercised on Linux; GUI, Windows service, firewall and rollback lifecycle still require a Windows test machine.

@@ -1,0 +1,102 @@
+Looking in links: /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels
+Processing /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/fastapi-0.162.0-py3-none-any.whl (from -r /var/www/Netory_DIST/build-support/downloads-1.0.1/requirements-windows.txt (line 1))
+  File was already downloaded /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/fastapi-0.162.0-py3-none-any.whl
+Processing /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/uvicorn-0.54.0-py3-none-any.whl (from -r /var/www/Netory_DIST/build-support/downloads-1.0.1/requirements-windows.txt (line 2))
+  File was already downloaded /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/uvicorn-0.54.0-py3-none-any.whl
+Processing /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/sqlalchemy-2.1.6-cp313-cp313-win_amd64.whl (from -r /var/www/Netory_DIST/build-support/downloads-1.0.1/requirements-windows.txt (line 3))
+  File was already downloaded /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/sqlalchemy-2.1.6-cp313-cp313-win_amd64.whl
+Processing /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/pymysql-1.2.3-py3-none-any.whl (from -r /var/www/Netory_DIST/build-support/downloads-1.0.1/requirements-windows.txt (line 4))
+  File was already downloaded /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/pymysql-1.2.3-py3-none-any.whl
+Processing /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/pydantic_settings-2.16.1-py3-none-any.whl (from -r /var/www/Netory_DIST/build-support/downloads-1.0.1/requirements-windows.txt (line 5))
+  File was already downloaded /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/pydantic_settings-2.16.1-py3-none-any.whl
+Processing /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/python_dotenv-1.2.4-py3-none-any.whl (from -r /var/www/Netory_DIST/build-support/downloads-1.0.1/requirements-windows.txt (line 6))
+  File was already downloaded /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/python_dotenv-1.2.4-py3-none-any.whl
+Processing /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/argon2_cffi-25.1.0-py3-none-any.whl (from -r /var/www/Netory_DIST/build-support/downloads-1.0.1/requirements-windows.txt (line 7))
+  File was already downloaded /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/argon2_cffi-25.1.0-py3-none-any.whl
+Processing /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/alembic-1.20.1-py3-none-any.whl (from -r /var/www/Netory_DIST/build-support/downloads-1.0.1/requirements-windows.txt (line 8))
+  File was already downloaded /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/alembic-1.20.1-py3-none-any.whl
+Processing /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/cryptography-50.0.2-cp311-abi3-win_amd64.whl (from -r /var/www/Netory_DIST/build-support/downloads-1.0.1/requirements-windows.txt (line 9))
+  File was already downloaded /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/cryptography-50.0.2-cp311-abi3-win_amd64.whl
+Processing /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/httpx-0.28.1-py3-none-any.whl (from -r /var/www/Netory_DIST/build-support/downloads-1.0.1/requirements-windows.txt (line 10))
+  File was already downloaded /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/httpx-0.28.1-py3-none-any.whl
+Processing /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/certifi-2026.10.23-py3-none-any.whl (from -r /var/www/Netory_DIST/build-support/downloads-1.0.1/requirements-windows.txt (line 11))
+  File was already downloaded /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/certifi-2026.10.23-py3-none-any.whl
+Processing /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/colorama-0.4.6-py2.py3-none-any.whl (from -r /var/www/Netory_DIST/build-support/downloads-1.0.1/requirements-windows.txt (line 13))
+  File was already downloaded /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/colorama-0.4.6-py2.py3-none-any.whl
+Processing /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/tzdata-2026.5-py2.py3-none-any.whl (from -r /var/www/Netory_DIST/build-support/downloads-1.0.1/requirements-windows.txt (line 14))
+  File was already downloaded /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/tzdata-2026.5-py2.py3-none-any.whl
+Processing /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/starlette-1.10.0-py3-none-any.whl (from fastapi<1,>=0.115->-r /var/www/Netory_DIST/build-support/downloads-1.0.1/requirements-windows.txt (line 1))
+  File was already downloaded /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/starlette-1.10.0-py3-none-any.whl
+Processing /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/pydantic-2.14.1-py3-none-any.whl (from fastapi<1,>=0.115->-r /var/www/Netory_DIST/build-support/downloads-1.0.1/requirements-windows.txt (line 1))
+  File was already downloaded /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/pydantic-2.14.1-py3-none-any.whl
+Processing /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/typing_extensions-4.16.0-py3-none-any.whl (from fastapi<1,>=0.115->-r /var/www/Netory_DIST/build-support/downloads-1.0.1/requirements-windows.txt (line 1))
+  File was already downloaded /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/typing_extensions-4.16.0-py3-none-any.whl
+Processing /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/typing_inspection-0.4.4-py3-none-any.whl (from fastapi<1,>=0.115->-r /var/www/Netory_DIST/build-support/downloads-1.0.1/requirements-windows.txt (line 1))
+  File was already downloaded /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/typing_inspection-0.4.4-py3-none-any.whl
+Processing /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/annotated_doc-0.0.5-py3-none-any.whl (from fastapi<1,>=0.115->-r /var/www/Netory_DIST/build-support/downloads-1.0.1/requirements-windows.txt (line 1))
+  File was already downloaded /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/annotated_doc-0.0.5-py3-none-any.whl
+Processing /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/opentelemetry_api-1.45.1-py3-none-any.whl (from fastapi<1,>=0.115->-r /var/www/Netory_DIST/build-support/downloads-1.0.1/requirements-windows.txt (line 1))
+  File was already downloaded /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/opentelemetry_api-1.45.1-py3-none-any.whl
+Processing /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/click-8.5.0-py3-none-any.whl (from uvicorn<1,>=0.34->-r /var/www/Netory_DIST/build-support/downloads-1.0.1/requirements-windows.txt (line 2))
+  File was already downloaded /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/click-8.5.0-py3-none-any.whl
+Processing /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/h11-0.16.0-py3-none-any.whl (from uvicorn<1,>=0.34->-r /var/www/Netory_DIST/build-support/downloads-1.0.1/requirements-windows.txt (line 2))
+  File was already downloaded /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/h11-0.16.0-py3-none-any.whl
+Processing /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/argon2_cffi_bindings-26.1.0-cp310-abi3-win_amd64.whl (from argon2-cffi<26,>=23.1->-r /var/www/Netory_DIST/build-support/downloads-1.0.1/requirements-windows.txt (line 7))
+  File was already downloaded /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/argon2_cffi_bindings-26.1.0-cp310-abi3-win_amd64.whl
+Processing /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/mako-1.4.3-py3-none-any.whl (from alembic<2,>=1.14->-r /var/www/Netory_DIST/build-support/downloads-1.0.1/requirements-windows.txt (line 8))
+  File was already downloaded /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/mako-1.4.3-py3-none-any.whl
+Processing /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/cffi-2.1.1-cp313-cp313-win_amd64.whl (from cryptography<51,>=50->-r /var/www/Netory_DIST/build-support/downloads-1.0.1/requirements-windows.txt (line 9))
+  File was already downloaded /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/cffi-2.1.1-cp313-cp313-win_amd64.whl
+Processing /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/anyio-4.15.1-py3-none-any.whl (from httpx<1,>=0.27->-r /var/www/Netory_DIST/build-support/downloads-1.0.1/requirements-windows.txt (line 10))
+  File was already downloaded /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/anyio-4.15.1-py3-none-any.whl
+Processing /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/httpcore-1.0.9-py3-none-any.whl (from httpx<1,>=0.27->-r /var/www/Netory_DIST/build-support/downloads-1.0.1/requirements-windows.txt (line 10))
+  File was already downloaded /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/httpcore-1.0.9-py3-none-any.whl
+Processing /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/idna-3.20-py3-none-any.whl (from httpx<1,>=0.27->-r /var/www/Netory_DIST/build-support/downloads-1.0.1/requirements-windows.txt (line 10))
+  File was already downloaded /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/idna-3.20-py3-none-any.whl
+Processing /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/pycparser-3.12-py3-none-any.whl (from cffi>=2.0.0->cryptography<51,>=50->-r /var/www/Netory_DIST/build-support/downloads-1.0.1/requirements-windows.txt (line 9))
+  File was already downloaded /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/pycparser-3.12-py3-none-any.whl
+Processing /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/annotated_types-0.8.0-py3-none-any.whl (from pydantic>=2.9.0->fastapi<1,>=0.115->-r /var/www/Netory_DIST/build-support/downloads-1.0.1/requirements-windows.txt (line 1))
+  File was already downloaded /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/annotated_types-0.8.0-py3-none-any.whl
+Processing /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/pydantic_core-2.50.1-cp313-cp313-win_amd64.whl (from pydantic>=2.9.0->fastapi<1,>=0.115->-r /var/www/Netory_DIST/build-support/downloads-1.0.1/requirements-windows.txt (line 1))
+  File was already downloaded /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/pydantic_core-2.50.1-cp313-cp313-win_amd64.whl
+Processing /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/markupsafe-3.0.4-cp313-cp313-win_amd64.whl (from Mako->alembic<2,>=1.14->-r /var/www/Netory_DIST/build-support/downloads-1.0.1/requirements-windows.txt (line 8))
+  File was already downloaded /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/markupsafe-3.0.4-cp313-cp313-win_amd64.whl
+Successfully downloaded fastapi uvicorn SQLAlchemy PyMySQL pydantic-settings python-dotenv argon2-cffi alembic cryptography httpx colorama httpcore certifi tzdata annotated-doc cffi click h11 opentelemetry-api pydantic pydantic-core annotated-types starlette anyio idna typing-extensions typing-inspection argon2-cffi-bindings Mako MarkupSafe pycparser
+Looking in links: /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels, /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels
+Processing /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/fastapi-0.162.0-py3-none-any.whl (from -r /var/www/Netory_DIST/build-support/downloads-1.0.1/requirements-windows.txt (line 1))
+Processing /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/uvicorn-0.54.0-py3-none-any.whl (from -r /var/www/Netory_DIST/build-support/downloads-1.0.1/requirements-windows.txt (line 2))
+Processing /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/sqlalchemy-2.1.6-cp313-cp313-win_amd64.whl (from -r /var/www/Netory_DIST/build-support/downloads-1.0.1/requirements-windows.txt (line 3))
+Processing /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/pymysql-1.2.3-py3-none-any.whl (from -r /var/www/Netory_DIST/build-support/downloads-1.0.1/requirements-windows.txt (line 4))
+Processing /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/pydantic_settings-2.16.1-py3-none-any.whl (from -r /var/www/Netory_DIST/build-support/downloads-1.0.1/requirements-windows.txt (line 5))
+Processing /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/python_dotenv-1.2.4-py3-none-any.whl (from -r /var/www/Netory_DIST/build-support/downloads-1.0.1/requirements-windows.txt (line 6))
+Processing /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/argon2_cffi-25.1.0-py3-none-any.whl (from -r /var/www/Netory_DIST/build-support/downloads-1.0.1/requirements-windows.txt (line 7))
+Processing /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/alembic-1.20.1-py3-none-any.whl (from -r /var/www/Netory_DIST/build-support/downloads-1.0.1/requirements-windows.txt (line 8))
+Processing /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/cryptography-50.0.2-cp311-abi3-win_amd64.whl (from -r /var/www/Netory_DIST/build-support/downloads-1.0.1/requirements-windows.txt (line 9))
+Processing /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/httpx-0.28.1-py3-none-any.whl (from -r /var/www/Netory_DIST/build-support/downloads-1.0.1/requirements-windows.txt (line 10))
+Processing /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/certifi-2026.10.23-py3-none-any.whl (from -r /var/www/Netory_DIST/build-support/downloads-1.0.1/requirements-windows.txt (line 11))
+Processing /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/colorama-0.4.6-py2.py3-none-any.whl (from -r /var/www/Netory_DIST/build-support/downloads-1.0.1/requirements-windows.txt (line 13))
+Processing /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/tzdata-2026.5-py2.py3-none-any.whl (from -r /var/www/Netory_DIST/build-support/downloads-1.0.1/requirements-windows.txt (line 14))
+Processing /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/starlette-1.10.0-py3-none-any.whl (from fastapi<1,>=0.115->-r /var/www/Netory_DIST/build-support/downloads-1.0.1/requirements-windows.txt (line 1))
+Processing /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/pydantic-2.14.1-py3-none-any.whl (from fastapi<1,>=0.115->-r /var/www/Netory_DIST/build-support/downloads-1.0.1/requirements-windows.txt (line 1))
+Processing /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/typing_extensions-4.16.0-py3-none-any.whl (from fastapi<1,>=0.115->-r /var/www/Netory_DIST/build-support/downloads-1.0.1/requirements-windows.txt (line 1))
+Processing /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/typing_inspection-0.4.4-py3-none-any.whl (from fastapi<1,>=0.115->-r /var/www/Netory_DIST/build-support/downloads-1.0.1/requirements-windows.txt (line 1))
+Processing /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/annotated_doc-0.0.5-py3-none-any.whl (from fastapi<1,>=0.115->-r /var/www/Netory_DIST/build-support/downloads-1.0.1/requirements-windows.txt (line 1))
+Processing /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/opentelemetry_api-1.45.1-py3-none-any.whl (from fastapi<1,>=0.115->-r /var/www/Netory_DIST/build-support/downloads-1.0.1/requirements-windows.txt (line 1))
+Processing /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/click-8.5.0-py3-none-any.whl (from uvicorn<1,>=0.34->-r /var/www/Netory_DIST/build-support/downloads-1.0.1/requirements-windows.txt (line 2))
+Processing /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/h11-0.16.0-py3-none-any.whl (from uvicorn<1,>=0.34->-r /var/www/Netory_DIST/build-support/downloads-1.0.1/requirements-windows.txt (line 2))
+Processing /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/argon2_cffi_bindings-26.1.0-cp310-abi3-win_amd64.whl (from argon2-cffi<26,>=23.1->-r /var/www/Netory_DIST/build-support/downloads-1.0.1/requirements-windows.txt (line 7))
+Processing /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/mako-1.4.3-py3-none-any.whl (from alembic<2,>=1.14->-r /var/www/Netory_DIST/build-support/downloads-1.0.1/requirements-windows.txt (line 8))
+Processing /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/cffi-2.1.1-cp313-cp313-win_amd64.whl (from cryptography<51,>=50->-r /var/www/Netory_DIST/build-support/downloads-1.0.1/requirements-windows.txt (line 9))
+Processing /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/anyio-4.15.1-py3-none-any.whl (from httpx<1,>=0.27->-r /var/www/Netory_DIST/build-support/downloads-1.0.1/requirements-windows.txt (line 10))
+Processing /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/httpcore-1.0.9-py3-none-any.whl (from httpx<1,>=0.27->-r /var/www/Netory_DIST/build-support/downloads-1.0.1/requirements-windows.txt (line 10))
+Processing /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/idna-3.20-py3-none-any.whl (from httpx<1,>=0.27->-r /var/www/Netory_DIST/build-support/downloads-1.0.1/requirements-windows.txt (line 10))
+Processing /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/pycparser-3.12-py3-none-any.whl (from cffi>=2.0.0->cryptography<51,>=50->-r /var/www/Netory_DIST/build-support/downloads-1.0.1/requirements-windows.txt (line 9))
+Processing /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/annotated_types-0.8.0-py3-none-any.whl (from pydantic>=2.9.0->fastapi<1,>=0.115->-r /var/www/Netory_DIST/build-support/downloads-1.0.1/requirements-windows.txt (line 1))
+Processing /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/pydantic_core-2.50.1-cp313-cp313-win_amd64.whl (from pydantic>=2.9.0->fastapi<1,>=0.115->-r /var/www/Netory_DIST/build-support/downloads-1.0.1/requirements-windows.txt (line 1))
+Processing /var/www/Netory_DIST/build-support/downloads-1.0.1/wheels/markupsafe-3.0.4-cp313-cp313-win_amd64.whl (from Mako->alembic<2,>=1.14->-r /var/www/Netory_DIST/build-support/downloads-1.0.1/requirements-windows.txt (line 8))
+Installing collected packages: tzdata, typing-extensions, python-dotenv, PyMySQL, pycparser, MarkupSafe, idna, h11, colorama, click, certifi, annotated-types, annotated-doc, uvicorn, typing-inspection, SQLAlchemy, pydantic-core, opentelemetry-api, Mako, httpcore, cffi, anyio, starlette, pydantic, httpx, cryptography, argon2-cffi-bindings, alembic, pydantic-settings, fastapi, argon2-cffi
+
+Successfully installed Mako-1.4.3 MarkupSafe-3.0.4 PyMySQL-1.2.3 SQLAlchemy-2.1.6 alembic-1.20.1 annotated-doc-0.0.5 annotated-types-0.8.0 anyio-4.15.1 argon2-cffi-25.1.0 argon2-cffi-bindings-26.1.0 certifi-2026.10.23 cffi-2.1.1 click-8.5.0 colorama-0.4.6 cryptography-50.0.2 fastapi-0.162.0 h11-0.16.0 httpcore-1.0.9 httpx-0.28.1 idna-3.20 opentelemetry-api-1.45.1 pycparser-3.12 pydantic-2.14.1 pydantic-core-2.50.1 pydantic-settings-2.16.1 python-dotenv-1.2.4 starlette-1.10.0 typing-extensions-4.16.0 typing-inspection-0.4.4 tzdata-2026.5 uvicorn-0.54.0
+Windows distribution ready: /var/www/Netory_DIST/1.0.1
+Netory-Windows-x64.zip: 40.8 MB
+Netory-Setup.exe: 34.8 MB
