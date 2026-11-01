@@ -1,11 +1,10 @@
-Protected Linux runtime and dependency validation
 PASS 78 bundled ELF files; maximum glibc symbol 2.34
 No broken requirements found.
+PASS compiled assistant port address allowlists, normalization, clearing and invalid address rejection
 PASS protected archive hashes, no Netory Python source, compiled licensing, fresh/repeated setup and identity/account preservation
 PASS native HTTP routes, administrator login, authenticated reads and unlicensed-write rejection
 PASS modified dependency, UI, compiled licensing module, migration and signature rejected; restored runtime starts
 
-Installer validation: private namespaces, real service-user runtime, apt/systemctl test shims
 PASS fresh install, generated credentials, permissions, actual HTTP login and current schema
 PASS upgrade, backup, administrator, secure-cookie setting and installation identity preservation
 PASS simulated failed upgrade restores previous release, inventory, identity and running service

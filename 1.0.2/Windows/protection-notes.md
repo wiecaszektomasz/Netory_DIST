@@ -2,6 +2,8 @@
 
 `Netory_DIST/1.0.2/Windows` is the protected Windows distribution of version 1.0.2. It uses the same installer and upgrade/data-preservation behavior as the regular release. The regular `1.0` and `1.0.1` artifacts are not modified.
 
+The Windows executable embeds the Netory logo at seven icon sizes (16–256 pixels). The same `deploy/windows/Netory.ico` asset is bundled for the setup window, Start menu shortcuts and Installed Apps entry. Both regular and protected builds retain this branding.
+
 ## Protection
 
 - Netory server modules, including licensing, authentication, models, API routes and installer bootstrap logic, are compiled with Cython to stripped x64 Windows `.pyd` extensions for the bundled CPython 3.13 runtime. Netory `.py`, generated `.c`, and `.pyx` sources are not distributed.

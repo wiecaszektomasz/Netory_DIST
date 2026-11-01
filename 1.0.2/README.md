@@ -5,7 +5,7 @@
 
 Ubuntu quick install:
 
-**Publication pending:** this HTTPS download URL becomes usable after the release files are published. Local-archive installation below is available now.
+Download the installer from netory.app, or use the local-archive installation below.
 
 ```bash
 wget --https-only -O /tmp/netory-install-1.0.2.sh https://netory.app/downloads/1.0.2/Linux/install.sh && sudo bash /tmp/netory-install-1.0.2.sh

@@ -1,14 +1,16 @@
 {
   "version": "1.0.2",
   "built_on": "2026-11-01",
-  "source_revision": "4223069764d2d1f72bccf907735a4415870c5e19",
+  "source_revision": "88ef978ddab5c5e1894755f67a8046a12391a689",
   "source_packaging_changes_uncommitted": true,
   "windows": {
     "edition": "safe",
     "native_modules": 49,
     "python": "3.13.16",
     "runtime_validation": "passed under Wine",
-    "real_windows_lifecycle_tested": false
+    "real_windows_lifecycle_tested": false,
+    "icon": "Netory logo: executable (seven resolutions), setup window, shortcuts and Installed Apps",
+    "compiled_assistant_port_addresses_validation": "passed under bundled Windows Python/Wine"
   },
   "linux": {
     "ubuntu_targets": [
@@ -28,7 +30,13 @@
     "source_distribution": false,
     "glibc_maximum_symbol_version": "2.34",
     "bundled_elf_files_audited": 78,
-    "dependencies": "Bundled inside the signed runtime; no client-side Python package download"
+    "dependencies": "Bundled inside the signed runtime; no client-side Python package download",
+    "compiled_assistant_port_addresses_validation": "passed under bundled Linux Python"
   },
-  "public_downloads": "not published; explicit approval required by automatic review"
+  "public_downloads": "Published at https://netory.app/downloads/1.0.2/ and linked from https://netory.app/download",
+  "refreshed_at_utc": "2026-11-01T21:46:09.280539+00:00",
+  "source_changes_sha256": "3c467077003f881ce6bd9bd3426a113ad6e2345c535eeececa085cc7de129d75",
+  "windows_icon_sha256": "58ebed928f16b2b018174fc4015a1da594d9b4578dfcfac99a764716bb3d0762",
+  "includes_assistant_port_addresses_fix": true,
+  "published_at_utc": "2026-11-01T22:07:22.104574+00:00"
 }

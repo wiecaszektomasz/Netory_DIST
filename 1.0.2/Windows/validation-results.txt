@@ -1,4 +1,10 @@
+PASS compiled assistant port address allowlists, normalization, clearing and invalid address rejection
 Original 1.0 to protected release upgrade, backup, administrator, configuration, inventory and license identity preservation passed
 Native HTTP routes, login, reads and unlicensed write rejection passed
 
 PASS: hashes, archive, no Netory Python source, fresh/repeated setup, schema, identity preservation, HTTP/license checks, tamper rejection
+
+PASS Netory executable icon resources: 16, 24, 32, 48, 64, 128 and 256 pixels; matching bundled icon
+
+PASS PowerShell syntax: Setup.ps1 and SetupForm.ps1
+PASS source installer regressions: 7 passed; assistant port-address regressions: 8 passed

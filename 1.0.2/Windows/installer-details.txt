@@ -1,4 +1,4 @@
-NETORY 1.0.1 WINDOWS X64
+NETORY 1.0.2 WINDOWS X64
 
 NETORY FOR WINDOWS (64-bit)
 
@@ -102,9 +102,9 @@ https://lic.netory.app over HTTPS for write access; there is no offline grace.
 One license is assigned to one instance. Preserve the licensing folder on upgrade
 and backup. Local clock monitoring and clock-recovery files are no longer used.
 
-UPDATING FROM 1.0 TO 1.0.1
+UPDATING FROM 1.0 TO 1.0.2
 Run the new Netory-Setup.exe as administrator on the existing computer. Setup detects the registered application and data folders and shows Update Netory. Keep the existing folders. Administrator fields remain locked; accounts and passwords are preserved. Existing port, private-LAN and HTTPS settings are loaded. Click Update Netory.
 
-Setup stops the service, backs up the SQLite database, environment/encryption configuration and licensing identity, replaces program files, applies migrations 0044 through 0046 and restarts the service. Backups remain in your selected data folder under backups. Do not uninstall 1.0 first or delete the data folder. Keep an independent backup before updating a production installation.
+Setup stops the service, backs up the SQLite database, environment/encryption configuration and licensing identity, replaces program files, applies migrations 0044 through 0054 and restarts the service. Backups remain in your selected data folder under backups. Do not uninstall 1.0 first or delete the data folder. Keep an independent backup before updating a production installation.
 
-Windows installed apps and the installation version.json identify the new version as 1.0.1. The new application includes instance licensing; existing licensing identities are preserved, and installations without an identity are provisioned once. A valid application license may need activation after upgrading the older 1.0 application. Contact your Netory license administrator if the application opens read-only.
+Windows installed apps and the installation version.json identify the new version as 1.0.2. The new application includes instance licensing; existing licensing identities are preserved, and installations without an identity are provisioned once. A valid application license may need activation after upgrading the older 1.0 application. Contact your Netory license administrator if the application opens read-only.
