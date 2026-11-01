@@ -1,0 +1,34 @@
+{
+  "version": "1.0.2",
+  "built_on": "2026-11-01",
+  "source_revision": "4223069764d2d1f72bccf907735a4415870c5e19",
+  "source_packaging_changes_uncommitted": true,
+  "windows": {
+    "edition": "safe",
+    "native_modules": 49,
+    "python": "3.13.16",
+    "runtime_validation": "passed under Wine",
+    "real_windows_lifecycle_tested": false
+  },
+  "linux": {
+    "ubuntu_targets": [
+      "24.04",
+      "26.04"
+    ],
+    "validation_host": "Ubuntu 26.04.1; application uses bundled Python 3.13.18",
+    "fresh_upgrade_rollback_http_tests": "passed in private namespaces",
+    "apt_and_systemctl": "test shims; clean VM test outstanding",
+    "default_admin": "admin",
+    "initial_password": "unique randomly generated whenever an administrator must be created",
+    "edition": "safe",
+    "native_modules": 49,
+    "architecture": "x86_64",
+    "python": "3.13.18 portable bundled",
+    "runtime_validation": "native HTTP/login/license checks and dependency/UI/licensing/migration/signature tamper rejection passed",
+    "source_distribution": false,
+    "glibc_maximum_symbol_version": "2.34",
+    "bundled_elf_files_audited": 78,
+    "dependencies": "Bundled inside the signed runtime; no client-side Python package download"
+  },
+  "public_downloads": "not published; explicit approval required by automatic review"
+}

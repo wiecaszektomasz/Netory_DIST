@@ -8,3 +8,9 @@
 !/*/Netory-Windows-x64/version.json
 __pycache__/
 *.pyc
+
+# Versioned platform releases keep extracted Windows payloads local.
+/*/Windows/Netory-Windows-x64/*
+!/*/Windows/Netory-Windows-x64/manifest.json
+!/*/Windows/Netory-Windows-x64/DEPENDENCIES.txt
+!/*/Windows/Netory-Windows-x64/version.json
