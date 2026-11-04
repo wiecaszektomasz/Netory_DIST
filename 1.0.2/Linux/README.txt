@@ -71,3 +71,17 @@ A compiled integrity guard verifies an Ed25519 signature and SHA-256 hashes befo
 Do not edit protected application/runtime files: startup rejects modifications. Updates replace the complete signed package. Standard Python/third-party dependency sources and notices remain where required by those components; only Netory's own application code is compiled/sourceless. Native compilation and signed checks make inspection and modification harder, but a machine owner with full control can still reverse engineer or patch software. Migration bytecode can also be decompiled.
 
 Runtime source: [Astral python-build-standalone](https://github.com/astral-sh/python-build-standalone/releases/tag/20261026), portable CPython 3.13.18 Linux x86-64. The exact upstream archive URL/hash and application hashes are recorded in `manifest.json`. See `../BUILD-INFO.md` and `validation-results.txt` for actual validation results and remaining clean-machine testing.
+
+## Optional HTTPS without Nginx
+
+Uvicorn can serve HTTPS directly. Supply a PEM certificate chain and matching unencrypted PEM private key from your trusted public or company certificate authority:
+
+```bash
+sudo bash install.sh --https --cert /path/fullchain.pem --key /path/privkey.pem
+```
+
+Alternatively, run `sudo bash install.sh --https` in an interactive terminal and enter both file paths when prompted. HTTPS defaults to port **8443**; use `--port` to choose another port from 1024 to 65535. Open `https://YOUR-CERTIFICATE-HOSTNAME:8443/` and allow that port only from intended networks. No additional Nginx installation is needed. The installer does not generate certificates, obtain certificates, redirect HTTP, or configure automatic renewal.
+
+The certificate and key are validated before Netory is stopped, then copied into `/var/lib/netory/tls/` as root-owned, service-group-readable files (directory 0750, files 0640). Do not upload your private key through the Netory web interface. Password-protected keys must be prepared for unattended service startup before installation. Use a certificate valid for the hostname/IP clients will access, with its full chain and a CA trusted by their browsers.
+
+The installer enables secure cookies automatically. Updates preserve existing direct HTTPS certificates and its port; repeat your custom `--bind` setting. To replace or renew certificates, rerun with `--cert`, `--key` and your existing `--port`/`--bind`. The service restarts. Existing TLS files are included in the protected update backup and restored on failure. Keep those backups private. HTTPS installation on a clean Ubuntu VM remains to be verified.

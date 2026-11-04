@@ -6,14 +6,16 @@ VERSION=1.0.2
 ARCHIVE_SHA256='4d602f9c481c241bb9de588394729d0600712437471f64735d692630a59934c6'
 BASE_URL="https://netory.app/downloads/$VERSION/Linux"
 ARCHIVE='' PORT=8000 BIND=0.0.0.0 ADMIN_USER=admin
+TLS=0 CERT='' KEY='' PORT_SET=0
 usage() {
-  echo "Usage: sudo bash install.sh [--archive /path/Netory-$VERSION-Linux.tar.gz] [--port 8000] [--bind 0.0.0.0] [--admin-user admin]"
+  echo "Usage: sudo bash install.sh [--archive /path/Netory-$VERSION-Linux.tar.gz] [--port 8000] [--bind 0.0.0.0] [--admin-user admin] [--https] [--cert /path/fullchain.pem --key /path/privkey.pem]"
 }
 while (($#)); do
   case "$1" in
-    --archive|--port|--bind|--admin-user)
+    --https) TLS=1; shift;;
+    --archive|--port|--bind|--admin-user|--cert|--key)
       (($# >= 2)) || { usage; exit 2; }
-      case "$1" in --archive) ARCHIVE=$2;; --port) PORT=$2;; --bind) BIND=$2;; --admin-user) ADMIN_USER=$2;; esac
+      case "$1" in --archive) ARCHIVE=$2;; --port) PORT=$2; PORT_SET=1;; --bind) BIND=$2;; --admin-user) ADMIN_USER=$2;; --cert) CERT=$2; TLS=1;; --key) KEY=$2; TLS=1;; esac
       shift 2;;
     --help|-h) usage; exit 0;;
     *) usage; exit 2;;
@@ -39,6 +41,25 @@ fi
 if [[ ! -f $ROOT/.installer-managed && ( -e $ROOT || -e $DATA ) ]]; then
   echo 'Existing Netory directories found. Back them up and migrate them manually first.' >&2; exit 1
 fi
+# Retain direct HTTPS and its port when upgrading without new TLS options.
+if [[ -f $DATA/tls/fullchain.pem && -f $DATA/tls/privkey.pem ]]; then
+  TLS=1
+  if (( ! PORT_SET )); then
+    SAVED_PORT=$(sed -n 's/.* --port \([0-9][0-9]*\).*/\1/p' "$UNIT")
+    [[ $SAVED_PORT =~ ^[0-9]{1,5}$ ]] && PORT=$SAVED_PORT
+  fi
+fi
+if (( TLS )); then
+  if [[ -z $CERT && -z $KEY && ! -f $DATA/tls/fullchain.pem ]]; then
+    [[ -t 0 ]] || { echo 'HTTPS requires --cert and --key PEM file paths.' >&2; exit 2; }
+    read -r -p 'Full certificate chain PEM file path: ' CERT
+    read -r -p 'Unencrypted private key PEM file path: ' KEY
+  fi
+  [[ -z $CERT && -z $KEY || -n $CERT && -n $KEY ]] || { echo 'Supply both --cert and --key.' >&2; exit 2; }
+  if (( ! PORT_SET )) && [[ ! -f $DATA/tls/fullchain.pem ]]; then PORT=8443; fi
+fi
+SCHEME=http
+(( ! TLS )) || SCHEME=https
 WORK=$(mktemp -d /tmp/netory-install.XXXXXXXX)
 OLD='' BACKUP='' CHANGED=0 WAS_ACTIVE=0 STOPPED=0 NEW=''
 cleanup() {
@@ -48,6 +69,7 @@ cleanup() {
     echo 'Installation failed; restoring the previous installation.' >&2
     systemctl stop netory.service >/dev/null 2>&1 || true
     if [[ -n $BACKUP ]]; then
+      rm -rf "$DATA/tls"
       cp -a "$BACKUP/data/." "$DATA/"
       cp -a "$BACKUP/netory.service" "$UNIT"
     fi
@@ -72,6 +94,20 @@ trap cleanup EXIT
 export DEBIAN_FRONTEND=noninteractive
 apt-get update
 apt-get install -y --no-install-recommends python3 libgcc-s1 libstdc++6 zlib1g ca-certificates wget openssl nmap iputils-ping util-linux
+if (( TLS )); then
+  # Stage inputs before any service/data changes. Never ask for a key password.
+  install -m 0600 -- "${CERT:-$DATA/tls/fullchain.pem}" "$WORK/fullchain.pem"
+  install -m 0600 -- "${KEY:-$DATA/tls/privkey.pem}" "$WORK/privkey.pem"
+  python3 - "$WORK/fullchain.pem" "$WORK/privkey.pem" <<'PYTLS'
+import ssl, sys
+context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+try:
+    context.load_cert_chain(sys.argv[1], sys.argv[2], password=lambda: '')
+except (OSError, ssl.SSLError):
+    raise SystemExit('Invalid certificate/key pair. Use PEM files and an unencrypted matching private key.')
+PYTLS
+  openssl x509 -in "$WORK/fullchain.pem" -noout -checkend 0 >/dev/null || { echo 'Certificate has expired or is invalid.' >&2; exit 2; }
+fi
 if [[ -n $ARCHIVE ]]; then
   cp -- "$ARCHIVE" "$WORK/package.tar.gz"
 else
@@ -110,6 +146,11 @@ fi
 CHANGED=1
 install -d -o root -g netory -m 0750 "$DATA"
 install -d -o netory -g netory -m 0750 "$DATA/db" "$DATA/licensing" "$DATA/logs"
+if (( TLS )); then
+  install -d -o root -g netory -m 0750 "$DATA/tls"
+  install -o root -g netory -m 0640 "$WORK/fullchain.pem" "$DATA/tls/fullchain.pem"
+  install -o root -g netory -m 0640 "$WORK/privkey.pem" "$DATA/tls/privkey.pem"
+fi
 # Passwords go through stdin; they are never included in process arguments.
 HAS_ADMIN=$(python3 - "$DATA/db/netory.db" <<'PYADMIN'
 import pathlib, sqlite3, sys
@@ -127,18 +168,23 @@ if [[ $HAS_ADMIN == 0 ]]; then
   install -m 0600 /dev/null "$DATA/initial-admin.txt"
   printf 'Username: %s\nPassword: %s\nChange this password after signing in.\n' "$ADMIN_USER" "$ADMIN_PASSWORD" > "$DATA/initial-admin.txt"
 fi
+export NETORY_INSTALL_TLS="$TLS"
 export NETORY_INSTALL_USER="$ADMIN_USER" NETORY_INSTALL_PASSWORD="$ADMIN_PASSWORD"
 "$NEW/runtime/bin/python3.13" - "$DATA/.env" <<'PY' | PYTHONPATH="$NEW/app" "$NEW/runtime/bin/python3.13" "$NEW/tools/bootstrap.pyc" setup --app "$NEW/app" --data "$DATA"
 import json, os, sys
 from dotenv import dotenv_values
-https = str(dotenv_values(sys.argv[1]).get('COOKIE_SECURE', 'false')).lower() == 'true'
+https = os.environ.get('NETORY_INSTALL_TLS') == '1' or str(dotenv_values(sys.argv[1]).get('COOKIE_SECURE', 'false')).lower() == 'true'
 print(json.dumps({'username': os.environ['NETORY_INSTALL_USER'], 'password': os.environ['NETORY_INSTALL_PASSWORD'], 'https': https}))
 PY
-unset NETORY_INSTALL_USER NETORY_INSTALL_PASSWORD ADMIN_PASSWORD
+unset NETORY_INSTALL_USER NETORY_INSTALL_PASSWORD NETORY_INSTALL_TLS ADMIN_PASSWORD
 chown root:netory "$DATA/.env"
 chmod 0640 "$DATA/.env"
 chown -R netory:netory "$DATA/db" "$DATA/licensing" "$DATA/logs"
 chmod -R u=rwX,g=rX,o= "$DATA/db" "$DATA/licensing" "$DATA/logs"
+TLS_ARGS=''
+if (( TLS )); then
+  TLS_ARGS=" --ssl-certfile $DATA/tls/fullchain.pem --ssl-keyfile $DATA/tls/privkey.pem"
+fi
 cat > "$UNIT" <<UNIT
 # Managed by the Netory Ubuntu installer.
 [Unit]
@@ -152,7 +198,7 @@ Group=netory
 WorkingDirectory=$DATA
 Environment=PYTHONUNBUFFERED=1
 Environment=PYTHONDONTWRITEBYTECODE=1
-ExecStart=$ROOT/current/runtime/bin/python3.13 -m uvicorn backend.main:app --app-dir $ROOT/current/app --host $BIND --port $PORT
+ExecStart=$ROOT/current/runtime/bin/python3.13 -m uvicorn backend.main:app --app-dir $ROOT/current/app --host $BIND --port $PORT$TLS_ARGS
 Restart=on-failure
 RestartSec=5
 UMask=0027
@@ -168,12 +214,19 @@ systemctl daemon-reload
 systemctl enable --now netory.service
 READY=0
 for ((attempt=0; attempt<60; attempt++)); do
-  if python3 - "$PORT" "$BIND" <<'PY'
-import sys, urllib.request
+  if python3 - "$PORT" "$BIND" "$SCHEME" "$DATA/tls/fullchain.pem" <<'PY'
+import ssl, sys, urllib.request
 try:
     host = '127.0.0.1' if sys.argv[2] == '0.0.0.0' else ('[::1]' if ':' in sys.argv[2] else sys.argv[2])
-    opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
-    with opener.open('http://' + host + ':' + sys.argv[1] + '/', timeout=2) as response:
+    handlers = [urllib.request.ProxyHandler({})]
+    if sys.argv[3] == 'https':
+        context = ssl.create_default_context(cafile=sys.argv[4])
+        # Probe the local bind address, not the certificate's public DNS name.
+        context.check_hostname = False
+        context.verify_flags |= ssl.VERIFY_X509_PARTIAL_CHAIN
+        handlers.append(urllib.request.HTTPSHandler(context=context))
+    opener = urllib.request.build_opener(*handlers)
+    with opener.open(sys.argv[3] + '://' + host + ':' + sys.argv[1] + '/', timeout=2) as response:
         assert response.status == 200 and b'auth-root' in response.read()
 except Exception:
     raise SystemExit(1)
@@ -185,8 +238,15 @@ done
 printf '%s\n' "$VERSION" > "$ROOT/.installer-managed"
 CHANGED=0
 IP=$(hostname -I | awk '{print $1}')
-printf '\nNetory %s is ready: http://%s:%s/\n' "$VERSION" "${IP:-localhost}" "$PORT"
+printf '\nNetory %s is ready: %s://%s:%s/\n' "$VERSION" "$SCHEME" "${IP:-localhost}" "$PORT"
 if [[ -f $DATA/initial-admin.txt ]]; then cat "$DATA/initial-admin.txt"; fi
 echo "Credentials file: $DATA/initial-admin.txt (root only; upgrades preserve existing accounts)."
 echo 'If a firewall is enabled, allow this TCP port from your trusted network.'
 [[ -z $BACKUP ]] || echo "Upgrade backup: $BACKUP"
+
+if (( TLS )); then
+  echo 'HTTPS enabled. Connect using the DNS name/IP covered by your certificate.'
+  echo "Certificates: $DATA/tls (root-owned, readable by the netory service group)."
+  echo 'Renew with --https --cert /path/fullchain.pem --key /path/privkey.pem and the same --bind/--port options.'
+  echo 'Certificate issuance and automatic renewal are not included.'
+fi
