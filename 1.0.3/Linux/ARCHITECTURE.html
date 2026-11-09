@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Netory 1.0.3 — Linux architecture</title><style>body{font:16px/1.65 system-ui,sans-serif;color:#173038;background:#f5f8f8;margin:0}main{max-width:900px;margin:40px auto;padding:32px;background:white;border:1px solid #d7e3e3;border-radius:12px}h1,h2{line-height:1.25}pre{padding:20px;overflow:auto;background:#102c35;color:#e7f5f5;border-radius:8px;font:14px/1.6 ui-monospace,monospace}code{font-family:ui-monospace,monospace}a{color:#067566}li{margin:8px 0}@media(max-width:600px){main{margin:0;padding:20px;border:0;border-radius:0}}</style></head>
+<body><main>
+<h1>Netory 1.0.3 — Linux architecture</h1>
+<p>Netory is a self-hosted web application. Users open it in a browser; one application service provides both the web interface and API, with a local SQLite database. A separate database server is not required.</p>
+<h2>Small architecture diagram</h2>
+<pre aria-label="Netory application architecture">Browser: Netory web interface
+        |
+        | HTTP :8000 (default)
+        v
+[Optional HTTPS reverse proxy, e.g. Nginx]
+        |  (or connect directly to Netory)
+        v
+Netory application — Uvicorn + FastAPI
+  - Serves the web interface and API
+  - Authentication, inventory, discovery, licensing
+        |
+        +---- SQLite database (db/netory.db)
+        +---- Configuration and encryption keys (.env)
+        +---- License identity/state (licensing/)
+        +---- Application logs (logs/)
+        |
+        +---- HTTPS to lic.netory.app (online licensing)
+        +---- Managed network devices (discovery/probes)
+
+systemd: netory.service
+        | starts and supervises
+        v
+Private Python runtime + Netory application</pre>
+<p>The proxy is optional. A direct connection goes from the browser to Uvicorn; a proxy connection goes through the proxy before reaching Uvicorn.</p>
+<h2>Main components</h2>
+<ul><li><strong>Browser interface:</strong> displays inventory and settings and sends API requests to the server.</li>
+<li><strong>Uvicorn + FastAPI:</strong> handles web requests, authentication and application features using the bundled private Python runtime.</li>
+<li><strong>SQLite:</strong> stores accounts, inventory and application records in a local database file. Database migrations run during setup/update.</li>
+<li><strong>Service manager:</strong> starts Netory automatically at boot and restarts it after an unexpected failure. The application runs as the restricted <code>netory</code> Linux account.</li>
+<li><strong>Licensing:</strong> preserves the installation identity locally and contacts <code>https://lic.netory.app</code>. A valid license and online licensing access are required for write access.</li>
+<li><strong>Network discovery:</strong> the server probes managed devices; results depend on network reachability and firewall rules. The Linux installer installs Nmap and ping utilities.</li></ul>
+<h2>Ports and HTTPS</h2><p>The default address is <code>http://SERVER-IP:8000/</code>; Netory binds to <code>0.0.0.0</code>. The installer does not install Nginx or change firewall rules. Nginx is optional: it can provide HTTPS and forward requests to Netory. For a proxy on the same machine, install with <code>--bind 127.0.0.1</code>. A different port can be selected with <code>--port</code>.</p>
+<h2>Files and backups</h2><ul><li>Program and private runtime: <code>/opt/netory/current</code>.</li><li>Data: <code>/var/lib/netory</code>, including <code>db/netory.db</code>, <code>.env</code>, <code>licensing/</code> and <code>logs/</code>.</li><li>Installer update backups: <code>/opt/netory/backups/</code>.</li></ul>
+<p>Back up the database together with <code>.env</code> and the licensing directory. Encryption keys are needed to read stored encrypted credentials. Program files are separate from customer data; protected application/runtime files are verified at startup and should not be edited.</p>
+<h2>Quick service check</h2><pre><code>sudo systemctl status netory --no-pager
+sudo journalctl -u netory -n 50 --no-pager
+curl -I http://127.0.0.1:8000/</code></pre>
+<p>Use your configured port if it differs from 8000. The curl command checks the default direct HTTP configuration on the server itself.</p>
+<p><a href="INSTALL.html">Installation instructions</a></p>
+</main></body></html>

@@ -1,0 +1,60 @@
+{
+  "version": "1.0.3",
+  "built_on": "2026-11-09",
+  "built_at_utc": "2026-11-09T19:16:52.574342+00:00",
+  "source_revision": "b2bd755211b98e863c6b368b43631ffb630fd15a",
+  "source_has_uncommitted_changes": false,
+  "source_checks": [
+    {
+      "suite": "backend",
+      "status": "passed",
+      "exit_code": 0,
+      "seconds": 976.09,
+      "log": "backend.log",
+      "counts": {
+        "tests": 901,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "failures": []
+    },
+    {
+      "suite": "frontend",
+      "status": "passed",
+      "exit_code": 0,
+      "seconds": 39.56,
+      "log": "frontend.log",
+      "counts": {
+        "tests": 192,
+        "pass": 192,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      }
+    }
+  ],
+  "windows": {
+    "edition": "safe",
+    "python": "3.13.16",
+    "native_modules": 50,
+    "runtime_validation": "passed with bundled Windows Python under Wine",
+    "real_windows_lifecycle_tested": false,
+    "authenticode_signed": false
+  },
+  "linux": {
+    "edition": "safe",
+    "python": "3.13.18",
+    "architecture": "x86_64",
+    "ubuntu_targets": [
+      "24.04",
+      "26.04"
+    ],
+    "native_modules": 50,
+    "runtime_validation": "passed with bundled Linux Python",
+    "installer_lifecycle": "fresh, repeated install, backup preservation and failed-upgrade rollback passed in private namespaces",
+    "apt_and_systemctl": "test shims; clean VM test outstanding"
+  },
+  "demo_browser_validation": "CSV, print/PDF, cabinet/network rack port pairs and viewer controls passed without uncaught JavaScript errors",
+  "public_downloads": "https://netory.app/downloads/1.0.3/"
+}
