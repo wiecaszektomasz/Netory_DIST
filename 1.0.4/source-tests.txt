@@ -1,8 +1,554 @@
-.................................................                        [100%]
+=== backend-source-tests.log ===
+..................................................................       [100%]
 =============================== warnings summary ===============================
-../var/www/Netory/.venv/lib/python3.14/site-packages/fastapi/testclient.py:1
+../../Netory/.venv/lib/python3.14/site-packages/fastapi/testclient.py:1
   /var/www/Netory/.venv/lib/python3.14/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
     from starlette.testclient import TestClient as TestClient  # noqa
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-49 passed, 1 warning in 27.45s
+66 passed, 1 warning in 54.32s
+
+
+=== installer-source-tests.log ===
+.......                                                                  [100%]
+7 passed in 54.59s
+
+
+=== source-js-tests.log ===
+TAP version 13
+# Subtest: demo discovery preview is localized in en and all integration actions stay disabled
+ok 1 - demo discovery preview is localized in en and all integration actions stay disabled
+  ---
+  duration_ms: 44.058074
+  type: 'test'
+  ...
+# Subtest: demo discovery preview is localized in pl and all integration actions stay disabled
+ok 2 - demo discovery preview is localized in pl and all integration actions stay disabled
+  ---
+  duration_ms: 9.061986
+  type: 'test'
+  ...
+# Subtest: demo discovery preview is localized in it and all integration actions stay disabled
+ok 3 - demo discovery preview is localized in it and all integration actions stay disabled
+  ---
+  duration_ms: 5.652635
+  type: 'test'
+  ...
+# Subtest: inventory changes stay in one browser-memory instance and reset with a new instance
+ok 4 - inventory changes stay in one browser-memory instance and reset with a new instance
+  ---
+  duration_ms: 199.519502
+  type: 'test'
+  ...
+# Subtest: viewer restrictions, settings, preferences, and disabled integrations are enforced in memory
+ok 5 - viewer restrictions, settings, preferences, and disabled integrations are enforced in memory
+  ---
+  duration_ms: 10.607554
+  type: 'test'
+  ...
+# Subtest: trash and estimates stay coherent with synthetic inventory
+ok 6 - trash and estimates stay coherent with synthetic inventory
+  ---
+  duration_ms: 16.890551
+  type: 'test'
+  ...
+# Subtest: memory storage does not persist or share browser preferences
+ok 7 - memory storage does not persist or share browser preferences
+  ---
+  duration_ms: 0.54067
+  type: 'test'
+  ...
+# Subtest: demo build includes only static assets and replaces every network/storage integration point
+ok 8 - demo build includes only static assets and replaces every network/storage integration point
+  ---
+  duration_ms: 21756.773984
+  type: 'test'
+  ...
+# Subtest: each asset category allows three total assets and rejects a fourth atomically
+ok 9 - each asset category allows three total assets and rejects a fourth atomically
+  ---
+  duration_ms: 138.30526
+  type: 'test'
+  ...
+# Subtest: limits are independent per client and category; deletion frees space and restores cannot exceed the cap
+ok 10 - limits are independent per client and category; deletion frees space and restores cannot exceed the cap
+  ---
+  duration_ms: 26.077197
+  type: 'test'
+  ...
+# Subtest: demo integration buttons are disabled and invoke no connection callbacks
+ok 11 - demo integration buttons are disabled and invoke no connection callbacks
+  ---
+  duration_ms: 17.775178
+  type: 'test'
+  ...
+# Subtest: notes support scoped CRUD, ownership, conflicts, pagination and memory isolation
+ok 12 - notes support scoped CRUD, ownership, conflicts, pagination and memory isolation
+  ---
+  duration_ms: 81.801625
+  type: 'test'
+  ...
+# Subtest: report configurations are private per account/client, versioned, and reset with the demo
+ok 13 - report configurations are private per account/client, versioned, and reset with the demo
+  ---
+  duration_ms: 27.72821
+  type: 'test'
+  ...
+# Subtest: demo tasks support validation, CRUD, deadline sorting, isolated clients and viewer access
+ok 14 - demo tasks support validation, CRUD, deadline sorting, isolated clients and viewer access
+  ---
+  duration_ms: 25.888572
+  type: 'test'
+  ...
+# Subtest: demo network discovery exposes no scan or import operations
+ok 15 - demo network discovery exposes no scan or import operations
+  ---
+  duration_ms: 3.89654
+  type: 'test'
+  ...
+# Subtest: demo port address examples can be edited in memory and reset with a new instance
+ok 16 - demo port address examples can be edited in memory and reset with a new instance
+  ---
+  duration_ms: 17.340799
+  type: 'test'
+  ...
+# Subtest: 8 physical connectors fit a sufficiently sized chassis deterministically
+ok 17 - 8 physical connectors fit a sufficiently sized chassis deterministically
+  ---
+  duration_ms: 44.437609
+  type: 'test'
+  ...
+# Subtest: 16 physical connectors fit a sufficiently sized chassis deterministically
+ok 18 - 16 physical connectors fit a sufficiently sized chassis deterministically
+  ---
+  duration_ms: 7.245154
+  type: 'test'
+  ...
+# Subtest: 24 physical connectors fit a sufficiently sized chassis deterministically
+ok 19 - 24 physical connectors fit a sufficiently sized chassis deterministically
+  ---
+  duration_ms: 11.165682
+  type: 'test'
+  ...
+# Subtest: 28 physical connectors fit a sufficiently sized chassis deterministically
+ok 20 - 28 physical connectors fit a sufficiently sized chassis deterministically
+  ---
+  duration_ms: 1.305182
+  type: 'test'
+  ...
+# Subtest: 48 physical connectors fit a sufficiently sized chassis deterministically
+ok 21 - 48 physical connectors fit a sufficiently sized chassis deterministically
+  ---
+  duration_ms: 10.524673
+  type: 'test'
+  ...
+# Subtest: 52 physical connectors fit a sufficiently sized chassis deterministically
+ok 22 - 52 physical connectors fit a sufficiently sized chassis deterministically
+  ---
+  duration_ms: 5.969346
+  type: 'test'
+  ...
+# Subtest: 54 physical connectors fit a sufficiently sized chassis deterministically
+ok 23 - 54 physical connectors fit a sufficiently sized chassis deterministically
+  ---
+  duration_ms: 7.463859
+  type: 'test'
+  ...
+# Subtest: 64 physical connectors fit a sufficiently sized chassis deterministically
+ok 24 - 64 physical connectors fit a sufficiently sized chassis deterministically
+  ---
+  duration_ms: 20.339642
+  type: 'test'
+  ...
+# Subtest: 96 physical connectors fit a sufficiently sized chassis deterministically
+ok 25 - 96 physical connectors fit a sufficiently sized chassis deterministically
+  ---
+  duration_ms: 27.254971
+  type: 'test'
+  ...
+# Subtest: 128 physical connectors fit a sufficiently sized chassis deterministically
+ok 26 - 128 physical connectors fit a sufficiently sized chassis deterministically
+  ---
+  duration_ms: 40.357474
+  type: 'test'
+  ...
+# Subtest: 512 physical connectors fit a sufficiently sized chassis deterministically
+ok 27 - 512 physical connectors fit a sufficiently sized chassis deterministically
+  ---
+  duration_ms: 303.141078
+  type: 'test'
+  ...
+# Subtest: 54-port 1U regression has exactly two rows of 27 paired ports, never a third
+ok 28 - 54-port 1U regression has exactly two rows of 27 paired ports, never a third
+  ---
+  duration_ms: 79.048709
+  type: 'test'
+  ...
+# Subtest: legacy records up to 54 keep all sockets and paired numbering while declaring uncertainty
+ok 29 - legacy records up to 54 keep all sockets and paired numbering while declaring uncertainty
+  ---
+  duration_ms: 10.475756
+  type: 'test'
+  ...
+# Subtest: registry covers every existing type, never assumes OSFP is predefined, and distinguishes envelopes
+ok 30 - registry covers every existing type, never assumes OSFP is predefined, and distinguishes envelopes
+  ---
+  duration_ms: 0.547758
+  type: 'test'
+  ...
+# Subtest: mixed RJ45/SFP/QSFP groups use distinct supplied dimensions and preserve physical order
+ok 31 - mixed RJ45/SFP/QSFP groups use distinct supplied dimensions and preserve physical order
+  ---
+  duration_ms: 6.996853
+  type: 'test'
+  ...
+# Subtest: confirmed impossible fixed two-row layout is rejected with feasible alternatives
+ok 32 - confirmed impossible fixed two-row layout is rejected with feasible alternatives
+  ---
+  duration_ms: 24.272029
+  type: 'test'
+  ...
+# Subtest: incomplete measurements never reject a potentially valid device as confirmed impossible
+ok 33 - incomplete measurements never reject a potentially valid device as confirmed impossible
+  ---
+  duration_ms: 47.954282
+  type: 'test'
+  ...
+# Subtest: fixed chassis bounds, reserved regions, collisions and minimum spacing are enforced
+ok 34 - fixed chassis bounds, reserved regions, collisions and minimum spacing are enforced
+  ---
+  duration_ms: 5.67707
+  type: 'test'
+  ...
+# Subtest: narrow shelf chassis, rotated sockets, stagger and explicit labels do not change rack width
+ok 35 - narrow shelf chassis, rotated sockets, stagger and explicit labels do not change rack width
+  ---
+  duration_ms: 7.584111
+  type: 'test'
+  ...
+# Subtest: logical interfaces and breakout children do not create physical sockets
+ok 36 - logical interfaces and breakout children do not create physical sockets
+  ---
+  duration_ms: 7.554061
+  type: 'test'
+  ...
+# Subtest: model metadata and per-record overrides take precedence without guessing manufacturer text
+ok 37 - model metadata and per-record overrides take precedence without guessing manufacturer text
+  ---
+  duration_ms: 0.554035
+  type: 'test'
+  ...
+# Subtest: physical placement is invariant under zoom, and unsupported connectors require measurements
+ok 38 - physical placement is invariant under zoom, and unsupported connectors require measurements
+  ---
+  duration_ms: 8.642136
+  type: 'test'
+  ...
+# Subtest: map physical sockets and rack faces share labels and dimensions
+ok 39 - map physical sockets and rack faces share labels and dimensions
+  ---
+  duration_ms: 69.429052
+  type: 'test'
+  ...
+# Subtest: malformed metadata, group duplication, fractional rows and negative spacing are rejected
+ok 40 - malformed metadata, group duplication, fractional rows and negative spacing are rejected
+  ---
+  duration_ms: 0.734038
+  type: 'test'
+  ...
+# Subtest: documented minimum spacing is applied automatically unless an invalid override is requested
+ok 41 - documented minimum spacing is applied automatically unless an invalid override is requested
+  ---
+  duration_ms: 0.757064
+  type: 'test'
+  ...
+# Subtest: 64 compact SFP fixture sockets can use 32 columns in a supplied 1U chassis
+ok 42 - 64 compact SFP fixture sockets can use 32 columns in a supplied 1U chassis
+  ---
+  duration_ms: 1.228826
+  type: 'test'
+  ...
+# Subtest: breakout child connections color the parent socket without inventing extra connectors
+ok 43 - breakout child connections color the parent socket without inventing extra connectors
+  ---
+  duration_ms: 24.582463
+  type: 'test'
+  ...
+# Subtest: connector identifiers and metadata cannot inject SVG markup or inherit object prototype profiles
+ok 44 - connector identifiers and metadata cannot inject SVG markup or inherit object prototype profiles
+  ---
+  duration_ms: 2.464497
+  type: 'test'
+  ...
+# Subtest: huge incomplete inventory counts are reported as uncertain without allocating sockets or expanding a chassis
+ok 45 - huge incomplete inventory counts are reported as uncertain without allocating sockets or expanding a chassis
+  ---
+  duration_ms: 1.303638
+  type: 'test'
+  ...
+# Subtest: large interface inventories summarize sparse port types without a dense count loop
+ok 46 - large interface inventories summarize sparse port types without a dense count loop
+  ---
+  duration_ms: 3.026496
+  type: 'test'
+  ...
+# Subtest: standalone virtual interfaces are schematic endpoints without physical sockets or chassis panels
+ok 47 - standalone virtual interfaces are schematic endpoints without physical sockets or chassis panels
+  ---
+  duration_ms: 3.412554
+  type: 'test'
+  ...
+# Subtest: mounting clearance reserves space without enlarging the visible socket in either view
+ok 48 - mounting clearance reserves space without enlarging the visible socket in either view
+  ---
+  duration_ms: 8.937501
+  type: 'test'
+  ...
+# Subtest: a model using the top edge does not have its sockets covered by the rack name annotation
+ok 49 - a model using the top edge does not have its sockets covered by the rack name annotation
+  ---
+  duration_ms: 2.81647
+  type: 'test'
+  ...
+# Subtest: default spacing separates sockets without changing explicit gaps or overflowing dense panels
+ok 50 - default spacing separates sockets without changing explicit gaps or overflowing dense panels
+  ---
+  duration_ms: 8.920833
+  type: 'test'
+  ...
+# Subtest: approximate SFP and SFP+ symbols enlarge into free row space without changing physical footprints
+ok 51 - approximate SFP and SFP+ symbols enlarge into free row space without changing physical footprints
+  ---
+  duration_ms: 5.500258
+  type: 'test'
+  ...
+# Subtest: generic 128-port devices use available multi-U space without requiring measured metadata
+ok 52 - generic 128-port devices use available multi-U space without requiring measured metadata
+  ---
+  duration_ms: 371.337727
+  type: 'test'
+  ...
+# Subtest: generic 56-port 1U switch shows two rows of 28 without shrinking connectors or chassis
+ok 53 - generic 56-port 1U switch shows two rows of 28 without shrinking connectors or chassis
+  ---
+  duration_ms: 37.886007
+  type: 'test'
+  ...
+# Subtest: routers pair ports vertically by default while preserving explicit numbering overrides
+ok 54 - routers pair ports vertically by default while preserving explicit numbering overrides
+  ---
+  duration_ms: 3.087215
+  type: 'test'
+  ...
+# Subtest: rack elevations number from bottom, span complete units, escape text and list unassigned assets
+ok 55 - rack elevations number from bottom, span complete units, escape text and list unassigned assets
+  ---
+  duration_ms: 53.001387
+  type: 'test'
+  ...
+# Subtest: rack settings support disabled and virtual assets without omitting stored placements
+ok 56 - rack settings support disabled and virtual assets without omitting stored placements
+  ---
+  duration_ms: 6.865785
+  type: 'test'
+  ...
+# Subtest: placement suggestions find contiguous free units, exclude the moved asset and detect full cabinets
+ok 57 - placement suggestions find contiguous free units, exclude the moved asset and detect full cabinets
+  ---
+  duration_ms: 15.696177
+  type: 'test'
+  ...
+# Subtest: Rack View is reachable from an empty network map and shows cabinets without routing links
+ok 58 - Rack View is reachable from an empty network map and shows cabinets without routing links
+  ---
+  duration_ms: 143.247413
+  type: 'test'
+  ...
+# Subtest: rack controls disable placement until mounting and cabinet selection are enabled
+ok 59 - rack controls disable placement until mounting and cabinet selection are enabled
+  ---
+  duration_ms: 4.132509
+  type: 'test'
+  ...
+# Subtest: compact rack faces expose every numbered port with connection, VLAN and speed information
+ok 60 - compact rack faces expose every numbered port with connection, VLAN and speed information
+  ---
+  duration_ms: 49.486833
+  type: 'test'
+  ...
+# Subtest: compact map view hides cabinet management controls and reserves taller U rows for device headings
+ok 61 - compact map view hides cabinet management controls and reserves taller U rows for device headings
+  ---
+  duration_ms: 1.585331
+  type: 'test'
+  ...
+# Subtest: rack magnifier and expansion toggle independently, with Escape and focus handling
+ok 62 - rack magnifier and expansion toggle independently, with Escape and focus handling
+  ---
+  duration_ms: 24.653233
+  type: 'test'
+  ...
+# Subtest: rack room filters support one room, several rooms, all rooms and unassigned cabinets
+ok 63 - rack room filters support one room, several rooms, all rooms and unassigned cabinets
+  ---
+  duration_ms: 56.155448
+  type: 'test'
+  ...
+# Subtest: room checkbox changes redraw the actual rack map and All rooms clears the selection
+ok 64 - room checkbox changes redraw the actual rack map and All rooms clears the selection
+  ---
+  duration_ms: 61.625252
+  type: 'test'
+  ...
+# Subtest: rack server ports use source-based connector dimensions and fixed multi-U chassis proportions
+ok 65 - rack server ports use source-based connector dimensions and fixed multi-U chassis proportions
+  ---
+  duration_ms: 7.106999
+  type: 'test'
+  ...
+# Subtest: rack backup power badges identify the UPS for devices with and without Ethernet ports
+ok 66 - rack backup power badges identify the UPS for devices with and without Ethernet ports
+  ---
+  duration_ms: 3.898128
+  type: 'test'
+  ...
+# Subtest: rack cabinets follow saved room order in compact and management views
+ok 67 - rack cabinets follow saved room order in compact and management views
+  ---
+  duration_ms: 1.276728
+  type: 'test'
+  ...
+# Subtest: two-row rack switches and patch panels pair odd ports above even ports in both rack views
+ok 68 - two-row rack switches and patch panels pair odd ports above even ports in both rack views
+  ---
+  duration_ms: 140.955627
+  type: 'test'
+  ...
+# Subtest: small rack switches retain the single-row physical-view layout
+ok 69 - small rack switches retain the single-row physical-view layout
+  ---
+  duration_ms: 5.312255
+  type: 'test'
+  ...
+1..69
+# tests 69
+# suites 0
+# pass 69
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 28217.163532
+
+
+=== demo-fixed-tests.log ===
+TAP version 13
+# Subtest: demo discovery preview is localized in en and all integration actions stay disabled
+ok 1 - demo discovery preview is localized in en and all integration actions stay disabled
+  ---
+  duration_ms: 19.755327
+  type: 'test'
+  ...
+# Subtest: demo discovery preview is localized in pl and all integration actions stay disabled
+ok 2 - demo discovery preview is localized in pl and all integration actions stay disabled
+  ---
+  duration_ms: 1.500005
+  type: 'test'
+  ...
+# Subtest: demo discovery preview is localized in it and all integration actions stay disabled
+ok 3 - demo discovery preview is localized in it and all integration actions stay disabled
+  ---
+  duration_ms: 1.195736
+  type: 'test'
+  ...
+# Subtest: inventory changes stay in one browser-memory instance and reset with a new instance
+ok 4 - inventory changes stay in one browser-memory instance and reset with a new instance
+  ---
+  duration_ms: 408.068527
+  type: 'test'
+  ...
+# Subtest: viewer restrictions, settings, preferences, and disabled integrations are enforced in memory
+ok 5 - viewer restrictions, settings, preferences, and disabled integrations are enforced in memory
+  ---
+  duration_ms: 34.456815
+  type: 'test'
+  ...
+# Subtest: trash and estimates stay coherent with synthetic inventory
+ok 6 - trash and estimates stay coherent with synthetic inventory
+  ---
+  duration_ms: 43.511009
+  type: 'test'
+  ...
+# Subtest: memory storage does not persist or share browser preferences
+ok 7 - memory storage does not persist or share browser preferences
+  ---
+  duration_ms: 0.607591
+  type: 'test'
+  ...
+# Subtest: demo build includes only static assets and replaces every network/storage integration point
+ok 8 - demo build includes only static assets and replaces every network/storage integration point
+  ---
+  duration_ms: 19800.606845
+  type: 'test'
+  ...
+# Subtest: each asset category allows three total assets and rejects a fourth atomically
+ok 9 - each asset category allows three total assets and rejects a fourth atomically
+  ---
+  duration_ms: 141.849331
+  type: 'test'
+  ...
+# Subtest: limits are independent per client and category; deletion frees space and restores cannot exceed the cap
+ok 10 - limits are independent per client and category; deletion frees space and restores cannot exceed the cap
+  ---
+  duration_ms: 16.045789
+  type: 'test'
+  ...
+# Subtest: demo integration buttons are disabled and invoke no connection callbacks
+ok 11 - demo integration buttons are disabled and invoke no connection callbacks
+  ---
+  duration_ms: 17.427044
+  type: 'test'
+  ...
+# Subtest: notes support scoped CRUD, ownership, conflicts, pagination and memory isolation
+ok 12 - notes support scoped CRUD, ownership, conflicts, pagination and memory isolation
+  ---
+  duration_ms: 88.485101
+  type: 'test'
+  ...
+# Subtest: report configurations are private per account/client, versioned, and reset with the demo
+ok 13 - report configurations are private per account/client, versioned, and reset with the demo
+  ---
+  duration_ms: 12.781736
+  type: 'test'
+  ...
+# Subtest: demo tasks support validation, CRUD, deadline sorting, isolated clients and viewer access
+ok 14 - demo tasks support validation, CRUD, deadline sorting, isolated clients and viewer access
+  ---
+  duration_ms: 23.449775
+  type: 'test'
+  ...
+# Subtest: demo network discovery exposes no scan or import operations
+ok 15 - demo network discovery exposes no scan or import operations
+  ---
+  duration_ms: 4.662017
+  type: 'test'
+  ...
+# Subtest: demo port address examples can be edited in memory and reset with a new instance
+ok 16 - demo port address examples can be edited in memory and reset with a new instance
+  ---
+  duration_ms: 29.63674
+  type: 'test'
+  ...
+1..16
+# tests 16
+# suites 0
+# pass 16
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 22591.606208
+
+
+=== browser-tests.log ===
+PASS 49 browser scenarios: all requested counts, both rack views, 360/768/1440px viewports, 75/100/150/200% zoom, uniform SVG scaling, matching map coordinates; no browser errors

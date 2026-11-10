@@ -1,33 +1,25 @@
 {
   "version": "1.0.4",
-  "built_at_utc": "2026-11-10T19:15:01.524739+00:00",
+  "built_on": "2026-11-10",
+  "built_at_utc": "2026-11-10T22:55:20.645592+00:00",
+  "refresh": "Physical port layouts and rack rendering; no version increment",
   "source": {
-    "revision": "fc231ac386550dffed33fe9ab0c9f45a7ed91cfa",
-    "source_has_uncommitted_changes": true,
-    "patch_sha256": "29235d7306933f1c25a8e04850bbe3eca9e791ffc1f79f4b117e42f859416d46",
-    "modified_files": [
-      "backend/licensing.py",
-      "deploy/windows/Install.cmd",
-      "deploy/windows/README.txt",
-      "deploy/windows/Setup.ps1",
-      "deploy/windows/Uninstall.cmd",
-      "deploy/windows/build_safe.py",
-      "deploy/windows/setup.nsi",
-      "docs/windows-installer.md",
-      "docs/windows-protected-installer.md",
-      "frontend/application-license.js",
-      "tests/test_licensing.py"
-    ]
+    "application_revision": "ff84013b7bd5390cb33fadd6cd305d880ec421cf",
+    "demo_revision": "89681a3f0892258efc88ddf4b94c3fa3eb47a86d",
+    "windows_manifest_revision": "ff84013b7bd5390cb33fadd6cd305d880ec421cf",
+    "linux_manifest_revision": "89681a3f0892258efc88ddf4b94c3fa3eb47a86d",
+    "note": "The intervening commit only changes the demo builder and its regression test; installer application sources are identical."
   },
   "source_tests": {
-    "passed": 49,
+    "python_passed": 73,
+    "frontend_and_demo_passed": 69,
+    "demo_fix_regression_passed": 16,
+    "physical_browser_scenarios": 49,
     "log": "source-tests.txt"
   },
   "windows": {
-    "runtime_validation": "passed under Wine; includes upgrade from 1.0",
-    "clock_recovery_regression": "passed using compiled licensing module",
-    "wizard_compile": "passed",
-    "powershell_syntax": "passed",
+    "runtime_validation": "passed under Wine, including upgrade from 1.0",
+    "clock_recovery_regression": "passed using compiled licensing",
     "authenticode_signed": false,
     "real_windows_lifecycle_tested": false,
     "antivirus_scanned": false
@@ -35,10 +27,8 @@
   "linux": {
     "runtime_validation": "passed using actual archive and portable runtime",
     "clock_recovery_regression": "passed using extracted archive",
-    "native_modules": 50,
-    "maximum_glibc_symbol": "2.34",
+    "native_modules": 51,
     "real_ubuntu_lifecycle_tested": false
   },
-  "built_on": "2026-11-10",
   "publication_target": "https://netory.app/downloads/1.0.4/"
 }

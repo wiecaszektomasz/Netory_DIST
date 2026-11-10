@@ -1,14 +1,12 @@
 # Netory 1.0.4
 
-Includes all current application changes and automatic online recovery from
-a persistent clock-rollback license block after the computer clock is corrected.
+Rebuilt from the current application source with updated physical port layouts,
+connector spacing, router numbering and readable rack headings. The release
+version remains **1.0.4**. Clock-rollback license recovery remains included.
 
 - [Windows installer](Windows/Netory-Setup.exe), [ZIP fallback](Windows/Netory-Windows-x64.zip), [instructions](Windows/README.md).
 - [Ubuntu installer](Linux/install.sh), [instructions](Linux/README.md).
 - [Build and validation record](BUILD-INFO.md).
 
-Windows now shows a visible wizard, uses standard zlib compression and runs
-setup/maintenance with RemoteSigned instead of Bypass. Existing data-preserving
-configuration and native module protection remain. This is an unsigned release;
-no claim of antivirus clearance or guaranteed absence of SmartScreen warnings
-is made. Prior release artifacts remain unchanged.
+Windows retains its visible setup wizard and native signed-integrity protection.
+The executable is not Authenticode-signed. Earlier version directories are unchanged.

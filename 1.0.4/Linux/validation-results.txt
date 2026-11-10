@@ -1,4 +1,4 @@
-PASS 79 bundled ELF files; maximum glibc symbol 2.34
+PASS 80 bundled ELF files; maximum glibc symbol 2.34
 No broken requirements found.
 PASS compiled assistant port address allowlists, normalization, clearing and invalid address rejection
 PASS protected archive hashes, no Netory Python source, compiled licensing, fresh/repeated setup and identity/account preservation
