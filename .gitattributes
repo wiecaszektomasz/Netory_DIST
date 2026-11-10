@@ -2,3 +2,6 @@
 * -text
 # Patch context lines are intentionally prefixed with spaces.
 *.patch -whitespace
+
+# Preserve Windows validation output while treating CRLF as a valid line ending.
+1.0.4/Windows/clock-recovery-validation.txt whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol

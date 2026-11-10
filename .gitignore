@@ -18,3 +18,6 @@ __pycache__/
 # Private installer refresh workspaces and retained local release backups.
 /.refresh-*/
 /.previous-*/
+
+# Private release build inputs, source snapshots, logs and publication backups.
+/*-build/

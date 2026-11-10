@@ -1,0 +1,1 @@
+PASS compiled licensing: rollback persists offline, incorrect clock stays blocked, fresh online approval recovers without reimport, recovery survives restart, accepted authority skew survives restart
